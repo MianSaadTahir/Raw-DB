@@ -8,24 +8,26 @@
 
 using namespace std;
 
-namespace rdbms {
+namespace rdbms
+{
 
-    class FileManager {
+    class FileManager
+    {
     public:
         FileManager();
         ~FileManager();
 
-        bool createFile(const string& filename);
-        bool openFile(const string& filename);
-        void closeFile(const string& filename);
+        bool createFile(const string &filename);
+        bool openFile(const string &filename);
+        void closeFile(const string &filename);
 
-        bool writePage(const string& filename, int pageNumber, const char* data);
-        bool readPage(const string& filename, int pageNumber, char* buffer);
+        bool writePage(const string &filename, int pageNumber, const char *data);
+        bool readPage(const string &filename, int pageNumber, char *buffer);
 
     private:
         unordered_map<string, fstream> openFiles;
 
-        string resolvePath(const string& filename);
+        string resolvePath(const string &filename);
     };
 
 } // namespace rdbms

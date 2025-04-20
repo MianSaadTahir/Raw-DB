@@ -3,7 +3,8 @@
 using namespace std;
 using namespace rdbms;
 
-int main() {
+int main()
+{
     BPlusTree tree;
 
     tree.insert(10, "Ten");

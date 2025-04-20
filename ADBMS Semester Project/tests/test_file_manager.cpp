@@ -6,7 +6,8 @@
 using namespace std;
 using namespace rdbms;
 
-void test_create_and_open() {
+void test_create_and_open()
+{
     FileManager fm;
     string filename = "test_file";
 
@@ -15,7 +16,8 @@ void test_create_and_open() {
     fm.closeFile(filename);
 }
 
-void test_write_and_read() {
+void test_write_and_read()
+{
     FileManager fm;
     string filename = "test_rw_file";
     fm.createFile(filename);
@@ -36,7 +38,8 @@ void test_write_and_read() {
     fm.closeFile(filename);
 }
 
-int main() {
+int main()
+{
     cout << "Running FileManager tests...\n";
 
     test_create_and_open();

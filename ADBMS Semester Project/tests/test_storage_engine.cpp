@@ -1,10 +1,11 @@
-#include "../include/storage_engine/storage_engine.hpp" 
+#include "../include/storage_engine/storage_engine.hpp"
 #include <iostream>
 
 using namespace rdbms;
 using namespace std;
 
-int main() {
+int main()
+{
     StorageEngine engine("students");
 
     engine.insert(12, "Twelve");

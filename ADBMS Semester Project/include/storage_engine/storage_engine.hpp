@@ -6,9 +6,11 @@
 #include "../indexing/b_plus_tree.hpp"
 #include "../page/page.hpp"
 
-namespace rdbms {
+namespace rdbms
+{
 
-    class StorageEngine {
+    class StorageEngine
+    {
     private:
         FileManager fileManager;
         BufferPool bufferPool;
@@ -16,9 +18,9 @@ namespace rdbms {
         string tableName;
 
     public:
-        StorageEngine(const string& tableName, int bufferSize = 5);
+        StorageEngine(const string &tableName, int bufferSize = 5);
 
-        bool insert(int key, const string& value);
+        bool insert(int key, const string &value);
         string search(int key);
         void printStorage();
 

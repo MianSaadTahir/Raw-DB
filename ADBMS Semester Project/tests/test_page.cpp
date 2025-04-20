@@ -6,7 +6,8 @@
 using namespace std;
 using namespace rdbms;
 
-void test_page_write_and_read() {
+void test_page_write_and_read()
+{
     Page page;
     string testData = "Hello, this is test data!";
     page.writeData(testData);
@@ -15,16 +16,18 @@ void test_page_write_and_read() {
     assert(readData == testData && "Page read data does not match written data");
 }
 
-void test_page_raw_load_and_read() {
+void test_page_raw_load_and_read()
+{
     Page page;
-    const char* rawData = "Raw page binary content.";
+    const char *rawData = "Raw page binary content.";
     page.loadFromRawData(rawData);
 
     string result = page.readData();
     assert(result == string(rawData) && "Loaded raw data does not match");
 }
 
-int main() {
+int main()
+{
     cout << "Running Page tests...\n";
 
     test_page_write_and_read();

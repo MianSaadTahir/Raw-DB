@@ -1,7 +1,8 @@
 #ifndef CONSTANTS_HPP
 #define CONSTANTS_HPP
 
-namespace rdbms {
+namespace rdbms
+{
     constexpr int PAGE_SIZE = 4096; // 4KB
 }
 

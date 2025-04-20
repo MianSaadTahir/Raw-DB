@@ -1,55 +1,98 @@
 #include <iostream>
-#include "../include/storage_engine/storage_engine.hpp"  // We only need to include the StorageEngine header
+#include "../include/storage_engine/storage_engine.hpp" // Include only the StorageEngine header
 
 using namespace rdbms;
 using namespace std;
 
-int main() {
-    // --- Initial Greetings ---
-    cout << "---------------------------------------------\n";
-    cout << "Welcome to the Custom RDBMS Simulation!\n";
-    cout << "---------------------------------------------\n";
-    
-    // --- Initialize Storage Engine ---
-    cout << "\nInitializing the Storage Engine for the 'students' database...\n";
-    StorageEngine engine("students");  // Initialize StorageEngine for the table 'students'
+int main()
+{
+    // ============================================================
+    //                  CUSTOM RELATIONAL DATABASE SYSTEM
+    // ============================================================
 
-    // --- Inserting Records into the Database ---
-    cout << "\nInserting records into the 'students' database:\n";
-    engine.insert(12, "Twelve");    // Insert record with key 12
-    engine.insert(10, "Ten");       // Insert record with key 10
-    engine.insert(5, "Five");       // Insert record with key 5
-    engine.insert(6, "Six");        // Insert record with key 6
-    engine.insert(7, "Seven");      // Insert record with key 7
-    engine.insert(17, "Seventeen"); // Insert record with key 17
-    engine.insert(20, "Twenty");    // Insert record with key 20
-    engine.insert(30, "Thirty");    // Insert record with key 30
+    cout << "============================================================\n";
+    cout << "         WELCOME TO CUSTOM RELATIONAL DATABASE SYSTEM        \n";
+    cout << "============================================================\n";
 
-    // --- Display Current Storage ---  
-    cout << "\nDatabase Storage after insertions (BufferPool & FileManager working):\n";
-    engine.printStorage();  // Prints the current state of the storage (BufferPool and index)
+    // Step 1: Initialize the Storage Engine
+    cout << "\n[Step 1] Initializing the Storage Engine for table: 'students'...\n";
+    StorageEngine engine("students");
 
-    // --- Display the BufferPool's LRU Cache ---
-    cout << "\nBufferPool LRU Cache (Most recently used pages shown first):\n";
-    // This is already handled by printStorage(), so no need for a separate call to printLRU
-    // engine.printLRU(); // This is not necessary anymore
-    
-    // --- Searching for Records ---
-    cout << "\nSearching for records in the database using B+ Tree index:\n";
-    cout << "Search for key 12: " << engine.search(12) << endl;   // Should return "Twelve"
-    cout << "Search for key 21: " << engine.search(21) << endl;   // Should return "Key not found"
+    /*
+        The StorageEngine internally initializes:
+        - FileManager: Handles file operations for reading/writing pages
+        - BufferPool: Manages limited memory cache with LRU replacement
+        - B+ Tree Index: Enables efficient indexing and searching by key
+    */
 
-    // --- Flushing All Pages to Disk ---
-    cout << "\nFlushing all pages from memory to disk...\n";
-    engine.flushAll();  // Writes all dirty pages back to disk, ensuring data is persistent on disk
-    
-    // --- Display Storage After Flushing ---
-    cout << "\nDisplaying database storage after flushing (Data written back to disk):\n";
-    engine.printStorage();  // Displays final storage status after flushing to disk
+    // Step 2: Insert Records
+    cout << "\n[Step 2] Inserting records into the 'students' table...\n";
 
-    // --- End of the Demonstration ---
-    cout << "\n=== END OF DEMONSTRATION ===\n";
-    cout << "---------------------------------------------\n";
-    
+    engine.insert(12, "Twelve");
+    engine.insert(10, "Ten");
+    engine.insert(5, "Five");
+    engine.insert(6, "Six");
+    engine.insert(7, "Seven");
+    engine.insert(17, "Seventeen");
+    engine.insert(20, "Twenty");
+    engine.insert(30, "Thirty");
+
+    /*
+        Each insert operation:
+        - Adds the key-value pair to the B+ Tree index
+        - Writes the data to the appropriate page in the BufferPool
+        - Evicts the least recently used page if memory is full
+    */
+
+    // Step 3: Print Current Database State
+    cout << "\n[Step 3] Displaying database state (storage and indexing info):\n";
+    engine.printStorage();
+
+    /*
+        Shows:
+        - B+ Tree structure: how data is indexed
+        - BufferPool contents: which pages are currently in memory
+        - LRU Order: recently used vs older pages
+    */
+
+    // Step 4: Search Records
+    cout << "\n[Step 4] Searching records using B+ Tree index:\n";
+
+    string result1 = engine.search(12);
+    string result2 = engine.search(21); // This key was never inserted
+
+    cout << "Search for key 12: " << result1 << endl;
+    cout << "Search for key 21: " << result2 << endl;
+
+    /*
+        The search uses the B+ Tree to locate the page,
+        then retrieves the value from that page.
+        If page is not in memory, it loads it from disk.
+    */
+
+    // Step 5: Flush All Pages to Disk
+    cout << "\n[Step 5] Flushing all in-memory pages to disk...\n";
+    engine.flushAll();
+
+    /*
+        Flush ensures:
+        - All dirty pages in BufferPool are written to disk
+        - No data is lost if program terminates
+    */
+
+    // Step 6: Final Database State
+    cout << "\n[Step 6] Database state after flushing to disk:\n";
+    engine.printStorage();
+
+    /*
+        After flushing, memory and disk are consistent.
+        Pages on disk reflect all the inserted/updated values.
+    */
+
+    // End of Demonstration
+    cout << "\n============================================================\n";
+    cout << "                  END OF DATABASE DEMO                      \n";
+    cout << "============================================================\n";
+
     return 0;
 }

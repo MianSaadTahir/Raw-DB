@@ -4,15 +4,17 @@
 #include <string>
 #include "../config/constants.hpp"
 
-namespace rdbms {
+namespace rdbms
+{
 
-    class Page {
+    class Page
+    {
     public:
         Page();
-        void writeData(const std::string& input);
+        void writeData(const std::string &input);
         std::string readData() const;
-        const char* getRawData() const;
-        void loadFromRawData(const char* raw);
+        const char *getRawData() const;
+        void loadFromRawData(const char *raw);
 
     private:
         char data[PAGE_SIZE];

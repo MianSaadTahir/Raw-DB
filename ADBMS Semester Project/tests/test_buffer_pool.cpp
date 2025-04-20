@@ -4,7 +4,8 @@
 using namespace std;
 using namespace rdbms;
 
-int main() {
+int main()
+{
     BufferPool pool(3);
 
     Page p1, p2, p3, p4;
