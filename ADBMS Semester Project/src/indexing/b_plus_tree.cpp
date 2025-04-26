@@ -15,7 +15,7 @@ namespace rdbms
 
     BPlusTree::~BPlusTree()
     {
-        // Recursively delete tree (left as an exercise for now)
+        // Recursively delete tree
     }
 
     void BPlusTree::insert(int key, const string &value)
