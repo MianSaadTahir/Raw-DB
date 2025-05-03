@@ -2,7 +2,8 @@
 #include <cassert>
 #include "../include/query_processor/parser.hpp"
 
-void testParser() {
+void testParser()
+{
     // Test: PUT Command
     std::string input1 = "put key1 value1";
     ParsedCommand result1 = Parser::parseFullCommand(input1);
@@ -129,7 +130,8 @@ void testParser() {
     std::cout << "[PASS] INVALID Command\n";
 }
 
-int main() {
+int main()
+{
     std::cout << "Running Parser Tests...\n";
     testParser();
     std::cout << "All tests passed successfully!\n";
