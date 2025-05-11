@@ -28,3 +28,9 @@ test_database.exe
 g++ tests/test_executor.cpp src/database/database.cpp src/query_processor/executor.cpp -Iinclude -o test_executor
 test_executor.exe
 
+g++ tests/test_parser.cpp src/query_processor/parser.cpp -Iinclude -o test_parser.exe
+./test_parser.exe
+
+g++ tests/test_table.cpp src/schema/table.cpp -Iinclude -o test_table.exe
+./test_table.exe
+
