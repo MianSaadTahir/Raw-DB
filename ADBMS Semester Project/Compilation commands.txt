@@ -29,8 +29,15 @@ g++ tests/test_executor.cpp src/database/database.cpp src/query_processor/execut
 test_executor.exe
 
 g++ tests/test_parser.cpp src/query_processor/parser.cpp -Iinclude -o test_parser.exe
-./test_parser.exe
+test_parser.exe
 
 g++ tests/test_table.cpp src/schema/table.cpp -Iinclude -o test_table.exe
-./test_table.exe
+test_table.exe
+
+g++ tests/test_recovery.cpp src/backup_recovery/recovery.cpp -Iinclude -o test_recovery
+test_recovery.exe
+
+g++ tests/test_access_control.cpp src/security/access_control.cpp -Iinclude -o test_access_control
+test_access_control.exe
+
 

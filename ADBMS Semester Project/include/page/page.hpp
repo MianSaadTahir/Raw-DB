@@ -15,6 +15,8 @@ namespace rdbms
         std::string readData() const;
         const char *getRawData() const;
         void loadFromRawData(const char *raw);
+        bool hasColumn(const std::string &column);
+        void updateColumn(const std::string &column, const std::string &newValue);
 
     private:
         char data[PAGE_SIZE];
@@ -22,4 +24,4 @@ namespace rdbms
 
 } // namespace rdbms
 
-#endif // PAGE_HPP
+#endif

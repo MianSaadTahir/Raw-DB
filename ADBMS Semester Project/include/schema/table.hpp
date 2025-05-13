@@ -49,6 +49,7 @@ private:
     std::string tableName;
     std::vector<Column> columns;
     std::vector<Row> rows;
+    std::vector<std::vector<Value> > selectFilteredRows(const std::string& columnName, const Value& matchValue) const;
 
 public:
     Table(const std::string &name);

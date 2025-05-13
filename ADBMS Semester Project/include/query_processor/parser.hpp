@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 
-// Enum for all command types
-enum class CommandType {
+enum class CommandType
+{
     INVALID,
     PUT,
     GET,
@@ -21,26 +21,24 @@ enum class CommandType {
     MATCH,
     LIMIT,
     DISTINCT,
-    CREATE_INDEX
+    CREATE_INDEX,
+    UPDATE // Added for UPDATE functionality
 };
 
-// Structure to hold parsed command and its arguments
-struct ParsedCommand {
+struct ParsedCommand
+{
     CommandType type;
     std::vector<std::string> args;
 };
 
-class Parser {
+class Parser
+{
 public:
-    // Main function to parse full command line and return ParsedCommand
-    static ParsedCommand parseFullCommand(const std::string& input);
+    static ParsedCommand parseFullCommand(const std::string &input);
 
 private:
-    // Helper function to tokenize the input string
-    static std::vector<std::string> tokenize(const std::string& input);
-
-    // Helper function to convert string to lowercase
-    static std::string toLower(const std::string& str);
+    static std::vector<std::string> tokenize(const std::string &input);
+    static std::string toLower(const std::string &str);
 };
 
-#endif // PARSER_HPP
+#endif

@@ -5,7 +5,8 @@
 #include <vector>
 #include "../database/database.hpp"
 
-enum class CommandType {
+enum class CommandType
+{
     PUT,
     GET,
     REMOVE,
@@ -20,32 +21,39 @@ enum class CommandType {
     MATCH,
     LIMIT,
     DISTINCT,
-    CREATE_INDEX
+    CREATE_INDEX,
+    UPDATE,
+    DELETE, // Added DELETE command
+    SELECT  // Added SELECT command
 };
 
-class Executor {
+class Executor
+{
 public:
-    Executor(Database& db);
-    void executeCommand(const std::string& commandLine);
+    Executor(Database &db);
+    void executeCommand(const std::string &commandLine);
 
 private:
-    Database& db;
+    Database &db;
 
-    void executePut(const std::vector<std::string>& args);
-    void executeGet(const std::vector<std::string>& args);
-    void executeRemove(const std::vector<std::string>& args);
+    void executePut(const std::vector<std::string> &args);
+    void executeGet(const std::vector<std::string> &args);
+    void executeRemove(const std::vector<std::string> &args);
     void executeShow();
     void executeFlush();
     void executeExit();
-    void executeCreateDatabase(const std::vector<std::string>& args);
-    void executeAlterDatabase(const std::vector<std::string>& args);
-    void executeJoin(const std::vector<std::string>& args);
-    void executeGroupBy(const std::vector<std::string>& args);
-    void executeOrder(const std::vector<std::string>& args);
-    void executeMatch(const std::vector<std::string>& args);
-    void executeLimit(const std::vector<std::string>& args);
+    void executeCreateDatabase(const std::vector<std::string> &args);
+    void executeAlterDatabase(const std::vector<std::string> &args);
+    void executeJoin(const std::vector<std::string> &args);
+    void executeGroupBy(const std::vector<std::string> &args);
+    void executeOrder(const std::vector<std::string> &args);
+    void executeMatch(const std::vector<std::string> &args);
+    void executeLimit(const std::vector<std::string> &args);
     void executeDistinct();
-    void executeCreateIndex(const std::vector<std::string>& args);
+    void executeCreateIndex(const std::vector<std::string> &args);
+    void executeUpdate(const std::vector<std::string> &args); // Added for UPDATE functionality
+    void executeDelete(const std::vector<std::string> &args); // Added for DELETE functionality
+    void executeSelect(const std::vector<std::string> &args); // Added for SELECT functionality
 };
 
 #endif // EXECUTOR_HPP

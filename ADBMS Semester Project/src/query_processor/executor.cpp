@@ -2,105 +2,109 @@
 #include <sstream>
 #include <iostream>
 
-Executor::Executor(Database& db) : db(db) {}
+Executor::Executor(Database &db) : db(db) {}
 
-void Executor::executeCommand(const std::string& commandLine) {
+void Executor::executeCommand(const std::string &commandLine)
+{
     std::istringstream stream(commandLine);
     std::string command;
     stream >> command;
 
     std::vector<std::string> args;
     std::string word;
-    while (stream >> word) {
+    while (stream >> word)
+    {
         args.push_back(word);
     }
 
-    if (command == "PUT") executePut(args);
-    else if (command == "GET") executeGet(args);
-    else if (command == "REMOVE") executeRemove(args);
-    else if (command == "SHOW") executeShow();
-    else if (command == "FLUSH") executeFlush();
-    else if (command == "EXIT") executeExit();
-    else if (command == "CREATE_DATABASE") executeCreateDatabase(args);
-    else if (command == "ALTER_DATABASE") executeAlterDatabase(args);
-    else if (command == "JOIN") executeJoin(args);
-    else if (command == "GROUP_BY") executeGroupBy(args);
-    else if (command == "ORDER") executeOrder(args);
-    else if (command == "MATCH") executeMatch(args);
-    else if (command == "LIMIT") executeLimit(args);
-    else if (command == "DISTINCT") executeDistinct();
-    else if (command == "CREATE_INDEX") executeCreateIndex(args);
-    else std::cout << "Unknown command: " << command << std::endl;
+    if (command == "PUT")
+        executePut(args);
+    else if (command == "GET")
+        executeGet(args);
+    else if (command == "REMOVE")
+        executeRemove(args);
+    else if (command == "SHOW")
+        executeShow();
+    else if (command == "FLUSH")
+        executeFlush();
+    else if (command == "EXIT")
+        executeExit();
+    else if (command == "CREATE_DATABASE")
+        executeCreateDatabase(args);
+    else if (command == "ALTER_DATABASE")
+        executeAlterDatabase(args);
+    else if (command == "JOIN")
+        executeJoin(args);
+    else if (command == "GROUP_BY")
+        executeGroupBy(args);
+    else if (command == "ORDER")
+        executeOrder(args);
+    else if (command == "MATCH")
+        executeMatch(args);
+    else if (command == "LIMIT")
+        executeLimit(args);
+    else if (command == "DISTINCT")
+        executeDistinct();
+    else if (command == "CREATE_INDEX")
+        executeCreateIndex(args);
+    else if (command == "UPDATE")
+        executeUpdate(args); // Added for UPDATE command
+    else if (command == "DELETE")
+        executeDelete(args); // Added for DELETE command
+    else if (command == "SELECT")
+        executeSelect(args); // Added for SELECT command
+    else
+        std::cout << "Unknown command: " << command << std::endl;
 }
 
-void Executor::executePut(const std::vector<std::string>& args) {
-    if (args.size() < 2) return;
-    db.insert(args[0], args[1]);
+// Implementation of executeUpdate for handling the UPDATE command
+void Executor::executeUpdate(const std::vector<std::string> &args)
+{
+    if (args.size() < 8)
+    {
+        std::cout << "Invalid UPDATE command format!" << std::endl;
+        return;
+    }
+
+    std::string table = args[0];
+    std::string column = args[2];
+    std::string value = args[4];
+    std::string conditionColumn = args[6];
+    std::string conditionValue = args[8];
+
+    // Check for operators in the condition column (e.g., !=, <, >)
+    std::string operatorStr = args[7];
+    db.update(table, column, value, conditionColumn, conditionValue, operatorStr);
 }
 
-void Executor::executeGet(const std::vector<std::string>& args) {
-    if (args.empty()) return;
-    std::cout << db.get(args[0]) << std::endl;
+// Implementation of executeDelete for handling DELETE command
+void Executor::executeDelete(const std::vector<std::string> &args)
+{
+    if (args.size() < 4)
+    {
+        std::cout << "Invalid DELETE command format!" << std::endl;
+        return;
+    }
+
+    std::string table = args[2];
+    std::string column = args[4];
+    std::string conditionValue = args[6];
+
+    db.deleteFrom(table, column, conditionValue);
 }
 
-void Executor::executeRemove(const std::vector<std::string>& args) {
-    if (args.empty()) return;
-    db.remove(args[0]);
-}
+// Implementation of executeSelect for handling SELECT command
+void Executor::executeSelect(const std::vector<std::string> &args)
+{
+    if (args.size() < 4)
+    {
+        std::cout << "Invalid SELECT command format!" << std::endl;
+        return;
+    }
 
-void Executor::executeShow() {
-    db.showAllData();
-}
+    std::string table = args[0];
+    std::string column = args[2];
+    std::string conditionValue = args[4];
 
-void Executor::executeFlush() {
-    db.flushDatabase();
-}
-
-void Executor::executeExit() {
-    std::cout << "Exiting...\n";
-    exit(0);
-}
-
-void Executor::executeCreateDatabase(const std::vector<std::string>& args) {
-    if (args.empty()) return;
-    db.createDatabase(args[0]);
-}
-
-void Executor::executeAlterDatabase(const std::vector<std::string>& args) {
-    if (args.empty()) return;
-    db.alterDatabase(args[0]);
-}
-
-void Executor::executeJoin(const std::vector<std::string>& args) {
-    if (args.size() < 2) return;
-    db.join(args[0], args[1]);
-}
-
-void Executor::executeGroupBy(const std::vector<std::string>& args) {
-    if (args.empty()) return;
-    db.groupBy(args[0]);
-}
-
-void Executor::executeOrder(const std::vector<std::string>& args) {
-    if (args.empty()) return;
-    db.order(args[0]);
-}
-
-void Executor::executeMatch(const std::vector<std::string>& args) {
-    if (args.empty()) return;
-    db.match(args[0]);
-}
-
-void Executor::executeLimit(const std::vector<std::string>& args) {
-    if (args.empty()) return;
-    db.limit(std::stoi(args[0]));
-}
-
-void Executor::executeDistinct() {
-    db.distinct();
-}
-
-void Executor::executeCreateIndex(const std::vector<std::string>& args) {
-    if (args.empty()) return;
-    db.createIndex(args[0]);
+    db.select(table, column, conditionValue);
 }

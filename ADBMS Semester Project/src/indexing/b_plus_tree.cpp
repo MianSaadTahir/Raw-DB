@@ -1,6 +1,8 @@
 #include "../include/indexing/b_plus_tree.hpp"
 #include <iostream>
 #include <algorithm> // for lower_bound
+#include <string>
+
 using namespace std;
 
 namespace rdbms
@@ -15,7 +17,7 @@ namespace rdbms
 
     BPlusTree::~BPlusTree()
     {
-        // Recursively delete tree
+        // Recursively delete tree (implement deletion of nodes here if needed)
     }
 
     void BPlusTree::insert(int key, const string &value)
@@ -105,6 +107,73 @@ namespace rdbms
         }
     }
 
+    bool BPlusTree::remove(int key)
+    {
+        BPlusTreeNode *newChild = nullptr;
+        int newKey = -1;
+        bool result = removeInternal(key, root, newChild, newKey);
+
+        // If root is empty, make the next level the new root
+        if (root->keys.empty() && !root->isLeaf)
+        {
+            root = root->children[0];
+        }
+
+        return result;
+    }
+
+    bool BPlusTree::removeInternal(int key, BPlusTreeNode *node, BPlusTreeNode *&newChild, int &newKey)
+    {
+        if (node->isLeaf)
+        {
+            auto it = find(node->keys.begin(), node->keys.end(), key);
+            if (it != node->keys.end())
+            {
+                int pos = it - node->keys.begin();
+                node->keys.erase(node->keys.begin() + pos);
+                node->values.erase(node->values.begin() + pos);
+                return true;
+            }
+            return false;
+        }
+        else
+        {
+            auto it = lower_bound(node->keys.begin(), node->keys.end(), key);
+            int pos = it - node->keys.begin();
+            BPlusTreeNode *child = node->children[pos];
+            bool result = removeInternal(key, child, newChild, newKey);
+
+            if (result)
+            {
+                if (child->keys.size() < MAX_KEYS / 2)
+                {
+                    fixAfterRemoval(node, pos);
+                }
+            }
+
+            return result;
+        }
+    }
+
+    void BPlusTree::fixAfterRemoval(BPlusTreeNode *node, int pos)
+    {
+        BPlusTreeNode *leftChild = node->children[pos];
+        BPlusTreeNode *rightChild = node->children[pos + 1];
+
+        if (leftChild->keys.size() < MAX_KEYS / 2)
+        {
+            // Merge or redistribute keys between the left and right children
+            leftChild->keys.push_back(node->keys[pos]);
+            leftChild->values.push_back(node->values[pos]);
+            node->keys.erase(node->keys.begin() + pos);
+            node->values.erase(node->values.begin() + pos);
+            leftChild->keys.insert(leftChild->keys.end(), rightChild->keys.begin(), rightChild->keys.end());
+            leftChild->values.insert(leftChild->values.end(), rightChild->values.begin(), rightChild->values.end());
+            node->children.erase(node->children.begin() + pos + 1);
+            delete rightChild;
+        }
+    }
+
     string BPlusTree::search(int key)
     {
         BPlusTreeNode *current = root;
@@ -125,6 +194,48 @@ namespace rdbms
         }
 
         return "Key not found";
+    }
+
+    bool BPlusTree::checkCondition(const std::string &value, const std::string &conditionValue, const std::string &operatorStr)
+    {
+        if (operatorStr == "=")
+        {
+            return value == conditionValue;
+        }
+        else if (operatorStr == ">")
+        {
+            return value > conditionValue;
+        }
+        else if (operatorStr == "<")
+        {
+            return value < conditionValue;
+        }
+        // Add more operators if necessary
+        return false;
+    }
+
+    std::vector<int> BPlusTree::searchByCondition(const std::string &column, const std::string &conditionValue, const std::string &operatorStr)
+    {
+        std::vector<int> matchingKeys;
+
+        BPlusTreeNode *current = root;
+
+        while (!current->isLeaf)
+        {
+            auto it = lower_bound(current->keys.begin(), current->keys.end(), conditionValue);
+            int pos = it - current->keys.begin();
+            current = current->children[pos];
+        }
+
+        for (size_t i = 0; i < current->keys.size(); ++i)
+        {
+            if (checkCondition(current->values[i], conditionValue, operatorStr))
+            {
+                matchingKeys.push_back(current->keys[i]);
+            }
+        }
+
+        return matchingKeys;
     }
 
     void BPlusTree::printRecursive(BPlusTreeNode *node, int level)
