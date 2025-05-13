@@ -1,7 +1,8 @@
 #include "../include/database/database.hpp"
-#include <algorithm>
-#include <sstream>
 #include <iostream>
+#include <sstream>
+#include <algorithm>
+#include <cstdlib>
 
 using namespace std;
 
@@ -9,167 +10,135 @@ Database::Database() : databaseName("Default") {}
 
 Database::~Database()
 {
-    cout << "Database " << databaseName << " is being destroyed.\n";
+    cout << "Database " << databaseName << " destroyed.\n";
 }
 
 void Database::createDatabase(const string &name)
 {
     databaseName = name;
     data.clear();
-    cout << "Database " << name << " created successfully.\n";
+    cout << "Created database: " << name << endl;
 }
 
 void Database::alterDatabase(const string &name)
 {
     databaseName = name;
-    cout << "Database altered: " << name << ".\n";
+    cout << "Altered to database: " << name << endl;
 }
 
 void Database::showDatabase() const
 {
-    cout << "Current database: " << databaseName << "\n";
+    cout << "Current database: " << databaseName << endl;
 }
 
 void Database::flushDatabase()
 {
     data.clear();
-    cout << "All data has been flushed from database " << databaseName << ".\n";
+    cout << "Database flushed.\n";
+}
+
+void Database::showAllData() const
+{
+    for (auto it = data.begin(); it != data.end(); ++it)
+        cout << it->first << " -> " << it->second << endl;
 }
 
 bool Database::insert(const string &key, const string &value)
 {
     data[key] = value;
-    cout << "Inserted/Updated: " << key << " -> " << value << "\n";
     return true;
 }
 
-bool Database::update(const string &table, const string &column, const string &newValue,
+bool Database::update(const string &, const string &column, const string &newValue,
                       const string &conditionColumn, const string &conditionValue, const string &operatorStr)
 {
-    // Update logic to modify the value based on condition
     for (auto &entry : data)
     {
-        if (entry.first == conditionColumn && entry.second == conditionValue)
+        if (entry.first == conditionColumn)
         {
-            entry.second = newValue; // Update the value
-            cout << "Updated: " << entry.first << " -> " << newValue << "\n";
-            return true;
+            if ((operatorStr == "=" && entry.second == conditionValue) ||
+                (operatorStr == "!=" && entry.second != conditionValue))
+            {
+                entry.second = newValue;
+                cout << "Updated: " << entry.first << " -> " << newValue << endl;
+                return true;
+            }
         }
     }
-    cout << "Error: Condition not met for update.\n";
     return false;
 }
 
-bool Database::deleteFrom(const string &table, const string &conditionColumn, const string &conditionValue)
+bool Database::deleteFrom(const string &, const string &column, const string &value)
 {
-    bool deleted = false;
+    bool found = false;
     for (auto it = data.begin(); it != data.end();)
     {
-        if (it->first == conditionColumn && it->second == conditionValue)
+        if (it->first == column && it->second == value)
         {
-            it = data.erase(it); // Erase the item
-            deleted = true;
-            cout << "Deleted: " << conditionColumn << " -> " << conditionValue << "\n";
+            cout << "Deleted: " << it->first << " -> " << it->second << endl;
+            it = data.erase(it);
+            found = true;
         }
         else
         {
             ++it;
         }
     }
-    if (!deleted)
-    {
-        cout << "Error: No matching data to delete.\n";
-    }
-    return deleted;
+    return found;
 }
 
-string Database::select(const string &table, const string &column, const string &conditionValue) const
+string Database::select(const string &, const string &column, const string &value) const
 {
-    // Select logic based on a condition
-    for (const auto &entry : data)
-    {
-        if (entry.first == column && entry.second == conditionValue)
-        {
-            return entry.second; // Return value if match found
-        }
-    }
-    return "Error: No matching data found.";
-}
-
-void Database::showAllData() const
-{
-    if (data.empty())
-    {
-        cout << "No data to display.\n";
-        return;
-    }
     for (auto it = data.begin(); it != data.end(); ++it)
-    {
-        cout << it->first << " -> " << it->second << "\n";
-    }
+        if (it->first == column && it->second == value)
+            return it->second;
+    return "Not found.";
 }
 
-void Database::join(const string &key1, const string &key2)
+void Database::join(const string &k1, const string &k2)
 {
-    cout << "Joining " << key1 << " and " << key2 << "\n";
-    // Join logic here (implementation as needed)
+    cout << "Joined: " << k1 << " with " << k2 << endl;
 }
 
 void Database::groupBy(const string &key)
 {
-    cout << "Grouping by: " << key << "\n";
-    // Grouping logic here (implementation as needed)
+    cout << "Grouped by: " << key << endl;
 }
 
 void Database::order(const string &key)
 {
-    cout << "Ordering by: " << key << "\n";
     orderedKeys.clear();
     for (auto it = data.begin(); it != data.end(); ++it)
-    {
         orderedKeys.push_back(it->first);
-    }
     sort(orderedKeys.begin(), orderedKeys.end());
-    for (auto it = orderedKeys.begin(); it != orderedKeys.end(); ++it)
-    {
-        cout << *it << " -> " << data[*it] << "\n";
-    }
+    for (size_t i = 0; i < orderedKeys.size(); ++i)
+        cout << orderedKeys[i] << " -> " << data[orderedKeys[i]] << endl;
 }
 
 void Database::match(const string &pattern)
 {
-    cout << "Matching pattern: " << pattern << "\n";
     for (auto it = data.begin(); it != data.end(); ++it)
     {
         if (it->first.find(pattern) != string::npos || it->second.find(pattern) != string::npos)
-        {
-            cout << it->first << " -> " << it->second << "\n";
-        }
+            cout << it->first << " -> " << it->second << endl;
     }
 }
 
 void Database::limit(int limit)
 {
     int count = 0;
-    for (auto it = data.begin(); it != data.end(); ++it)
-    {
-        if (count++ >= limit)
-            break;
-        cout << it->first << " -> " << it->second << "\n";
-    }
+    for (auto it = data.begin(); it != data.end() && count < limit; ++it, ++count)
+        cout << it->first << " -> " << it->second << endl;
 }
 
 void Database::distinct()
 {
-    cout << "Distinct entries:\n";
     for (auto it = index.begin(); it != index.end(); ++it)
-    {
-        cout << *it << " -> " << data[*it] << "\n";
-    }
+        cout << *it << " -> " << data[*it] << endl;
 }
 
 void Database::createIndex(const string &key)
 {
     index.insert(key);
-    cout << "Index created for key: " << key << "\n";
+    cout << "Created index for: " << key << endl;
 }

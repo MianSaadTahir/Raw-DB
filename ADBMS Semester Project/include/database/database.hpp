@@ -4,7 +4,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <iostream>
 #include <unordered_set>
 
 class Database
@@ -17,14 +16,13 @@ public:
     void alterDatabase(const std::string &name);
     void showDatabase() const;
     void flushDatabase();
+    void showAllData() const;
 
     bool insert(const std::string &key, const std::string &value);
     bool update(const std::string &table, const std::string &column, const std::string &newValue,
                 const std::string &conditionColumn, const std::string &conditionValue, const std::string &operatorStr);
     bool deleteFrom(const std::string &table, const std::string &conditionColumn, const std::string &conditionValue);
     std::string select(const std::string &table, const std::string &column, const std::string &conditionValue) const;
-
-    void showAllData() const;
 
     void join(const std::string &key1, const std::string &key2);
     void groupBy(const std::string &key);

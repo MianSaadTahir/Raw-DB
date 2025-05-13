@@ -6,36 +6,48 @@
 using namespace std;
 using namespace rdbms;
 
-void test_page_write_and_read()
+void printSection(const string &title)
 {
-    Page page;
-    string testData = "Hello, this is test data!";
-    page.writeData(testData);
-
-    string readData = page.readData();
-    assert(readData == testData && "Page read data does not match written data");
-}
-
-void test_page_raw_load_and_read()
-{
-    Page page;
-    const char *rawData = "Raw page binary content.";
-    page.loadFromRawData(rawData);
-
-    string result = page.readData();
-    assert(result == string(rawData) && "Loaded raw data does not match");
+    cout << "\n==== " << title << " ====\n";
 }
 
 int main()
 {
-    cout << "Running Page tests...\n";
+    Page page;
 
-    test_page_write_and_read();
-    cout << "Page write/read test passed.\n";
+    printSection("Testing writeData() and readData()");
+    string testData = "id=1,name=Alice,age=30";
+    page.writeData(testData);
+    string readBack = page.readData();
+    cout << "Written: " << testData << endl;
+    cout << "Read:    " << readBack << endl;
+    assert(readBack == testData);
 
-    test_page_raw_load_and_read();
-    cout << "Page raw data load test passed.\n";
+    printSection("Testing getRawData()");
+    const char *raw = page.getRawData();
+    assert(strncmp(raw, testData.c_str(), testData.size()) == 0);
+    cout << "Raw data matches expected." << endl;
 
-    cout << "All Page tests passed successfully.\n";
+    printSection("Testing loadFromRawData()");
+    const char *newRaw = "id=2,name=Bob,age=40";
+    page.loadFromRawData(newRaw);
+    string afterLoad = page.readData();
+    cout << "Loaded Raw: " << newRaw << "\nRead:       " << afterLoad << endl;
+    assert(afterLoad == string(newRaw));
+
+    printSection("Testing hasColumn()");
+    assert(page.hasColumn("name") == true);
+    assert(page.hasColumn("salary") == false);
+    cout << "Column check passed." << endl;
+
+    printSection("Testing updateColumn()");
+    page.updateColumn("name", "Bobby");
+    string updatedData = page.readData();
+    cout << "Updated: " << updatedData << endl;
+    assert(updatedData.find("name=Bobby") != string::npos);
+    assert(page.hasColumn("name"));
+    cout << "Update passed." << endl;
+
+    cout << "\nAll Page tests passed successfully.\n";
     return 0;
 }

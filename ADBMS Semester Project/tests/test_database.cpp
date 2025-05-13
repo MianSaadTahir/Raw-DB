@@ -2,91 +2,86 @@
 #include <iostream>
 #include <cassert>
 
-using namespace std;
-
-// Test basic CRUD operations (Create, Read, Update, Delete)
-void testBasicCRUD() {
-    cout << "\n===== [TEST] Basic CRUD Operations =====\n";
-
+void testInsertAndSelect()
+{
     Database db;
-    db.createDatabase("TestDB");
+    db.insert("key1", "value1");
+    db.insert("key2", "value2");
 
-    cout << "-> Inserting 'key1' with value 'value1'\n";
-    assert(db.insert("key1", "value1") == true);
+    assert(db.select("Default", "key1", "value1") == "value1");
+    assert(db.select("Default", "key2", "value2") == "value2");
+    assert(db.select("Default", "key3", "value3") == "Not found.");
 
-    string val = db.get("key1");
-    cout << "-> Retrieved 'key1': " << val << "\n";
-    assert(val == "value1");
-
-    cout << "-> Updating 'key1' to value 'value2'\n";
-    assert(db.update("key1", "value2") == true);
-
-    val = db.get("key1");
-    cout << "-> Retrieved 'key1' after update: " << val << "\n";
-    assert(val == "value2");
-
-    cout << "-> Removing 'key1'\n";
-    assert(db.remove("key1") == true);
-
-    val = db.get("key1");
-    cout << "-> Retrieving 'key1' after removal: " << val << "\n";
-    assert(val == "Error: Key not found.");
+    std::cout << "testInsertAndSelect passed.\n";
 }
 
-// Test flushing the database and displaying data
-void testFlushAndShow() {
-    cout << "\n===== [TEST] Flush & Show All Data =====\n";
-
+void testUpdate()
+{
     Database db;
-    db.insert("user1", "Alice");
-    db.insert("user2", "Bob");
+    db.insert("name", "Alice");
+    bool updated = db.update("Default", "name", "Bob", "name", "Alice", "=");
+    assert(updated);
+    assert(db.select("Default", "name", "Bob") == "Bob");
 
-    cout << "-> Current database contents:\n";
-    db.showAllData();
+    std::cout << "testUpdate passed.\n";
+}
 
-    cout << "-> Flushing all data from database...\n";
+void testDelete()
+{
+    Database db;
+    db.insert("temp", "delete_me");
+    bool deleted = db.deleteFrom("Default", "temp", "delete_me");
+    assert(deleted);
+    assert(db.select("Default", "temp", "delete_me") == "Not found.");
+
+    std::cout << "testDelete passed.\n";
+}
+
+void testFlushAndShow()
+{
+    Database db;
+    db.insert("a", "1");
+    db.insert("b", "2");
     db.flushDatabase();
-
-    string val = db.get("user1");
-    cout << "-> Retrieving 'user1' after flush: " << val << "\n";
-    assert(val == "Error: Key not found.");
+    assert(db.select("Default", "a", "1") == "Not found.");
+    std::cout << "testFlushAndShow passed.\n";
 }
 
-// Test advanced features: ordering, matching, limiting, indexing
-void testExtras() {
-    cout << "\n===== [TEST] Advanced Functionalities =====\n";
-
+void testJoinGroupByOrder()
+{
     Database db;
-    db.insert("alpha", "100");
-    db.insert("beta", "200");
-    db.insert("gamma", "300");
-    db.insert("delta", "100");
+    db.insert("c", "3");
+    db.insert("d", "4");
 
-    cout << "\n-> Ordering entries by key:\n";
-    db.order("any");
+    db.join("c", "d"); // Just prints
+    db.groupBy("c");   // Just prints
+    db.order("c");     // Should print keys in order
 
-    cout << "\n-> Matching keys/values containing 'a':\n";
-    db.match("a");
-
-    cout << "\n-> Limiting results to 2 entries:\n";
-    db.limit(2);
-
-    cout << "\n-> Creating index on key 'alpha':\n";
-    db.createIndex("alpha");
-
-    cout << "\n-> Displaying distinct values:\n";
-    db.distinct();
+    std::cout << "testJoinGroupByOrder passed.\n";
 }
 
-int main() {
-    cout << "=========================================\n";
-    cout << "         RUNNING DATABASE TESTS          \n";
-    cout << "=========================================\n";
+void testMatchLimitDistinctIndex()
+{
+    Database db;
+    db.insert("fruit", "apple");
+    db.insert("fruit2", "banana");
+    db.match("apple");
+    db.limit(1);
+    db.createIndex("fruit");
+    db.distinct();
 
-    testBasicCRUD();
+    std::cout << "testMatchLimitDistinctIndex passed.\n";
+}
+
+int main()
+{
+    testInsertAndSelect();
+    testUpdate();
+    testDelete();
     testFlushAndShow();
-    testExtras();
+    testJoinGroupByOrder();
+    testMatchLimitDistinctIndex();
 
-    cout << "\nAll database tests passed successfully!\n";
+    std::cout << "All database tests passed.\n";
     return 0;
 }

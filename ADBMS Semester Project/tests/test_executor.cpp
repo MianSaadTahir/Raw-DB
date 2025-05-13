@@ -1,71 +1,83 @@
-#include "../include/database/database.hpp"
 #include "../include/query_processor/executor.hpp"
+#include "../include/database/database.hpp"
 #include <iostream>
+#include <cassert>
 
-using namespace std;
-
-// Simulate real command execution
-void simulateCommands(Executor& executor) {
-    cout << "\n===== [TEST] Executor Command Simulation =====\n";
-
-    cout << "\n> CREATE_DATABASE TestExecDB\n";
-    executor.executeCommand("CREATE_DATABASE TestExecDB");
-
-    cout << "\n> PUT key1 val1\n";
-    executor.executeCommand("PUT key1 val1");
-
-    cout << "\n> GET key1\n";
-    executor.executeCommand("GET key1");
-
-    cout << "\n> PUT key1 val2 (simulated update)\n";
-    executor.executeCommand("PUT key1 val2");
-
-    cout << "\n> GET key1 (after update)\n";
-    executor.executeCommand("GET key1");
-
-    cout << "\n> REMOVE key1\n";
-    executor.executeCommand("REMOVE key1");
-
-    cout << "\n> GET key1 (should be missing)\n";
-    executor.executeCommand("GET key1");
-
-    cout << "\n> PUT key2 val2\n";
-    executor.executeCommand("PUT key2 val2");
-
-    cout << "\n> PUT key3 val3\n";
-    executor.executeCommand("PUT key3 val3");
-
-    cout << "\n> ORDER dummy\n";
-    executor.executeCommand("ORDER dummy");
-
-    cout << "\n> LIMIT 1\n";
-    executor.executeCommand("LIMIT 1");
-
-    cout << "\n> MATCH val\n";
-    executor.executeCommand("MATCH val");
-
-    cout << "\n> CREATE_INDEX key2\n";
-    executor.executeCommand("CREATE_INDEX key2");
-
-    cout << "\n> DISTINCT\n";
-    executor.executeCommand("DISTINCT");
-
-    cout << "\n> FLUSH\n";
-    executor.executeCommand("FLUSH");
-
-    cout << "\n> SHOW (should be empty)\n";
-    executor.executeCommand("SHOW");
-}
-
-int main() {
-    cout << "=========================================\n";
-    cout << "         RUNNING EXECUTOR TESTS          \n";
-    cout << "=========================================\n";
-
+void testBasicCommands()
+{
     Database db;
     Executor executor(db);
-    simulateCommands(executor);
 
-    cout << "\nAll executor commands executed successfully!\n";
+    executor.executeCommand("PUT id123 John");
+    executor.executeCommand("PUT id456 Jane");
+    executor.executeCommand("SHOW");
+
+    executor.executeCommand("GET Default id123");
+    executor.executeCommand("GET Default id456");
+
+    executor.executeCommand("REMOVE id123 John");
+    executor.executeCommand("SHOW");
+
+    std::cout << "testBasicCommands passed.\n";
+}
+
+void testDatabaseOps()
+{
+    Database db;
+    Executor executor(db);
+
+    executor.executeCommand("CREATE_DATABASE testdb");
+    executor.executeCommand("ALTER_DATABASE prod");
+
+    executor.executeCommand("PUT user1 Alice");
+    executor.executeCommand("GET Default user1");
+
+    executor.executeCommand("FLUSH");
+    executor.executeCommand("SHOW");
+
+    std::cout << "testDatabaseOps passed.\n";
+}
+
+void testAdvancedCommands()
+{
+    Database db;
+    Executor executor(db);
+
+    executor.executeCommand("PUT k1 v1");
+    executor.executeCommand("PUT k2 v2");
+    executor.executeCommand("PUT k3 v3");
+
+    executor.executeCommand("CREATE_INDEX k1");
+    executor.executeCommand("DISTINCT");
+    executor.executeCommand("MATCH v2");
+    executor.executeCommand("ORDER k1");
+    executor.executeCommand("LIMIT 2");
+
+    std::cout << "testAdvancedCommands passed.\n";
+}
+
+void testUpdateDeleteSelect()
+{
+    Database db;
+    Executor executor(db);
+
+    executor.executeCommand("PUT id100 Tom");
+    executor.executeCommand("UPDATE Default SET id100 = Jerry WHERE id100 = Tom");
+    executor.executeCommand("GET Default id100");
+
+    executor.executeCommand("DELETE Default id100 Jerry");
+    executor.executeCommand("GET Default id100");
+
+    std::cout << "testUpdateDeleteSelect passed.\n";
+}
+
+int main()
+{
+    testBasicCommands();
+    testDatabaseOps();
+    testAdvancedCommands();
+    testUpdateDeleteSelect();
+
+    std::cout << "All executor tests passed.\n";
     return 0;
 }

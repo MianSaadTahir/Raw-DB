@@ -1,4 +1,4 @@
-#include "../../include/schema/table.hpp"
+#include "../include/schema/table.hpp"
 
 // ---------------- Value methods ------------------
 

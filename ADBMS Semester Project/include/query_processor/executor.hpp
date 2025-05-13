@@ -23,8 +23,8 @@ enum class CommandType
     DISTINCT,
     CREATE_INDEX,
     UPDATE,
-    DELETE, // Added DELETE command
-    SELECT  // Added SELECT command
+    DELETE,
+    SELECT
 };
 
 class Executor
@@ -51,9 +51,9 @@ private:
     void executeLimit(const std::vector<std::string> &args);
     void executeDistinct();
     void executeCreateIndex(const std::vector<std::string> &args);
-    void executeUpdate(const std::vector<std::string> &args); // Added for UPDATE functionality
-    void executeDelete(const std::vector<std::string> &args); // Added for DELETE functionality
-    void executeSelect(const std::vector<std::string> &args); // Added for SELECT functionality
+    void executeUpdate(const std::vector<std::string> &args);
+    void executeDelete(const std::vector<std::string> &args);
+    void executeSelect(const std::vector<std::string> &args);
 };
 
 #endif // EXECUTOR_HPP

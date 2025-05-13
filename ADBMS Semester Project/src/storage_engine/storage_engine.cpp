@@ -4,19 +4,16 @@
 #include <vector>
 #include <string>
 
-using namespace std;
-
 namespace rdbms
 {
-
-    StorageEngine::StorageEngine(const string &table, int bufferSize)
+    StorageEngine::StorageEngine(const std::string &table, int bufferSize)
         : bufferPool(bufferSize), tableName(table)
     {
         fileManager.createFile(tableName);
         fileManager.openFile(tableName);
     }
 
-    bool StorageEngine::insert(int key, const string &value)
+    bool StorageEngine::insert(int key, const std::string &value)
     {
         Page page;
         page.writeData(value);
@@ -27,29 +24,30 @@ namespace rdbms
         // Write to file
         if (!fileManager.writePage(tableName, pageNumber, page.getRawData()))
         {
-            cerr << "Failed to write page for key: " << key << endl;
+            std::cerr << "Failed to write page for key: " << key << std::endl;
             return false;
         }
 
         // Add to buffer pool
-        string pageId = tableName + "_" + to_string(pageNumber);
+        std::string pageId = tableName + "_" + std::to_string(pageNumber);
         bufferPool.addPage(pageId, page);
 
         // Add to index
-        index.insert(key, pageId);
+        index.insert(key, pageNumber); // Use the key-value pair as key and pageNumber
         return true;
     }
 
-    string StorageEngine::search(int key)
+    std::string StorageEngine::search(int key)
     {
-        string pageId = index.search(key);
+        int pageNumber = index.search(key); // This returns the page number
 
-        if (pageId == "Key not found")
+        if (pageNumber == -1)
         {
             return "Key not found";
         }
 
         // Try to get from buffer pool
+        std::string pageId = tableName + "_" + std::to_string(pageNumber);
         if (bufferPool.hasPage(pageId))
         {
             Page page = bufferPool.getPage(pageId);
@@ -57,7 +55,6 @@ namespace rdbms
         }
 
         // Otherwise load from file
-        int pageNumber = stoi(pageId.substr(pageId.find('_') + 1));
         char buffer[PAGE_SIZE];
         if (!fileManager.readPage(tableName, pageNumber, buffer))
         {
@@ -78,24 +75,24 @@ namespace rdbms
 
     void StorageEngine::flushAll()
     {
-        cout << "Flushing all pages from BufferPool to disk...\n";
+        std::cout << "Flushing all pages from BufferPool to disk...\n";
 
         const auto &cache = bufferPool.getCache();
 
         for (const auto &entry : cache)
         {
-            const string &pageId = entry.first;
+            const std::string &pageId = entry.first;
             const Page &page = entry.second;
 
             size_t underscorePos = pageId.find_last_of('_');
-            if (underscorePos == string::npos)
+            if (underscorePos == std::string::npos)
                 continue;
 
-            string filename = pageId.substr(0, underscorePos);
-            int pageNumber = stoi(pageId.substr(underscorePos + 1));
+            std::string filename = pageId.substr(0, underscorePos);
+            int pageNumber = std::stoi(pageId.substr(underscorePos + 1));
 
             fileManager.writePage(filename, pageNumber, page.getRawData());
-            cout << "Flushed page: " << pageId << " to disk.\n";
+            std::cout << "Flushed page: " << pageId << " to disk.\n";
         }
     }
 
@@ -103,7 +100,7 @@ namespace rdbms
                                const std::string &conditionColumn, const std::string &conditionValue, const std::string &operatorStr)
     {
         // Search for rows that match the condition
-        std::vector<int> matchingKeys = index.searchByCondition(conditionColumn, conditionValue, operatorStr);
+        std::vector<int> matchingKeys = index.searchByCondition(stoi(conditionValue), operatorStr);
 
         if (matchingKeys.empty())
         {
@@ -114,13 +111,7 @@ namespace rdbms
         // For each matching row, update the value
         for (int key : matchingKeys)
         {
-            std::string pageId = index.search(key);
-
-            if (pageId == "Key not found")
-            {
-                std::cout << "Key not found: " << key << std::endl;
-                continue;
-            }
+            std::string pageId = tableName + "_" + std::to_string(key);
 
             // Retrieve the page from buffer pool or file
             Page page;
@@ -130,9 +121,8 @@ namespace rdbms
             }
             else
             {
-                int pageNumber = std::stoi(pageId.substr(pageId.find('_') + 1));
                 char buffer[PAGE_SIZE];
-                if (!fileManager.readPage(tableName, pageNumber, buffer))
+                if (!fileManager.readPage(tableName, key, buffer))
                 {
                     std::cout << "Failed to load page for key: " << key << std::endl;
                     continue;
@@ -155,8 +145,7 @@ namespace rdbms
             bufferPool.addPage(pageId, page);
 
             // Flush the page to disk
-            int pageNumber = std::stoi(pageId.substr(pageId.find('_') + 1));
-            if (!fileManager.writePage(tableName, pageNumber, page.getRawData()))
+            if (!fileManager.writePage(tableName, key, page.getRawData()))
             {
                 std::cout << "Failed to write updated page for key: " << key << std::endl;
             }
@@ -170,7 +159,7 @@ namespace rdbms
     void StorageEngine::deleteFrom(const std::string &table, const std::string &column, const std::string &conditionValue, const std::string &operatorStr)
     {
         // Search for rows that match the condition
-        std::vector<int> matchingKeys = index.searchByCondition(column, conditionValue, operatorStr);
+        std::vector<int> matchingKeys = index.searchByCondition(stoi(conditionValue), operatorStr);
 
         if (matchingKeys.empty())
         {
@@ -181,7 +170,7 @@ namespace rdbms
         // For each matching row, delete it from the storage
         for (int key : matchingKeys)
         {
-            std::string pageId = index.search(key);
+            std::string pageId = tableName + "_" + std::to_string(key);
             if (pageId == "Key not found")
             {
                 std::cout << "Key not found: " << key << std::endl;
@@ -198,7 +187,7 @@ namespace rdbms
     void StorageEngine::select(const std::string &table, const std::string &column, const std::string &conditionValue, const std::string &operatorStr)
     {
         // Search for rows that match the condition
-        std::vector<int> matchingKeys = index.searchByCondition(column, conditionValue, operatorStr);
+        std::vector<int> matchingKeys = index.searchByCondition(stoi(conditionValue), operatorStr);
 
         if (matchingKeys.empty())
         {
@@ -209,7 +198,7 @@ namespace rdbms
         // Display selected records
         for (int key : matchingKeys)
         {
-            std::string pageId = index.search(key);
+            std::string pageId = tableName + "_" + std::to_string(key);
             if (pageId == "Key not found")
             {
                 std::cout << "Key not found: " << key << std::endl;
@@ -225,9 +214,8 @@ namespace rdbms
             }
             else
             {
-                int pageNumber = std::stoi(pageId.substr(pageId.find('_') + 1));
                 char buffer[PAGE_SIZE];
-                if (!fileManager.readPage(tableName, pageNumber, buffer))
+                if (!fileManager.readPage(tableName, key, buffer))
                 {
                     std::cout << "Failed to load page for key: " << key << std::endl;
                     continue;
