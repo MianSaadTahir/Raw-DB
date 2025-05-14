@@ -1,13 +1,16 @@
 #include <iostream>
 #include <string>
+#include <sstream>
+#include <vector>
 #include "../include/query_processor/executor.hpp"
 #include "../include/security/access_control.hpp"
 #include "../include/database/database.hpp"
+#include "../include/backup_recovery/recovery.hpp" // Include recovery manager
 
 using namespace std;
 using namespace rdbms;
 
-// Function to display available commands
+// Show available commands
 void showCommands()
 {
     cout << "\nAvailable Commands:\n"
@@ -24,8 +27,8 @@ void showCommands()
          << "  LIMIT <table_name> <n>\n"
          << "  DISTINCT <table_name> <column>\n"
          << "  CREATE_INDEX <table_name> <column>\n"
-         << "  BACKUP <backup_path>\n"
-         << "  RESTORE <backup_path>\n"
+         << "  BACKUP <backup_file>\n"
+         << "  RESTORE <backup_file>\n"
          << "  SHOWDATABASE\n"
          << "  SHOWTABLES\n"
          << "  FLUSH\n"
@@ -42,7 +45,7 @@ int main()
     cout << "  Welcome to Custom RDBMS Console  \n";
     cout << "===================================\n";
 
-    // Access Control setup for users
+    // Setup users
     AccessControl accessControl;
     accessControl.addUser("admin", "admin123", Role::ADMIN);
     accessControl.addUser("guest", "guest123", Role::GUEST);
@@ -54,57 +57,92 @@ int main()
     cout << "Password: ";
     cin >> password;
 
-    // Authenticate user
     if (!accessControl.authenticate(username, password))
     {
         cout << "Authentication failed. Exiting...\n";
         return 1;
     }
 
-    // Show user role after login
     Role userRole = accessControl.getUserRole(username);
     cout << "Login successful. Role: " << (userRole == Role::ADMIN ? "Admin" : "Guest") << "\n";
 
-    // Database and executor setup
     Database database;
     Executor executor(database);
 
-    cin.ignore(); // clear input buffer after login
+    // This must match the actual DB file used in your system
+    const std::string databaseFileName = "database.txt";
+    RecoveryManager recoveryManager(databaseFileName);
+
+    cin.ignore(); // Clear input buffer
     string input;
 
-    // Display available commands
     showCommands();
 
     while (true)
     {
         cout << "\n>>> ";
-        getline(cin, input); // User input
-
-        if (input.empty()) // Ignore empty commands
+        getline(cin, input);
+        if (input.empty())
             continue;
 
-        // Handle exit command
-        if (input == "EXIT" || input == "exit" || input == "quit")
+        // Parse command and arguments
+        istringstream iss(input);
+        vector<string> tokens;
+        string token;
+        while (iss >> token)
+            tokens.push_back(token);
+
+        if (tokens.empty())
+            continue;
+
+        string command = tokens[0];
+
+        // Convert command to uppercase for robustness
+        for (auto &c : command)
+            c = toupper(c);
+
+        if (command == "EXIT")
         {
             cout << "Exiting database. Goodbye!\n";
             break;
         }
 
-        // Show available commands
-        if (input == "HELP" || input == "help")
+        if (command == "HELP")
         {
             showCommands();
             continue;
         }
 
-        // Execute the command through the executor
+        // Handle BACKUP
+        if (command == "BACKUP" && tokens.size() == 2)
+        {
+            string backupName = tokens[1];
+            if (recoveryManager.createBackup(backupName))
+                cout << "Backup created successfully as '" << backupName << "'\n";
+            else
+                cout << "Backup failed.\n";
+            continue;
+        }
+
+        // Handle RESTORE
+        if (command == "RESTORE" && tokens.size() == 2)
+        {
+            string backupName = tokens[1];
+            if (recoveryManager.restoreBackup(backupName))
+                cout << "Database restored successfully from '" << backupName << "'\n";
+            else
+                cout << "Restore failed.\n";
+            continue;
+        }
+
+        // Everything else handled by executor
         try
         {
             executor.executeCommand(input);
         }
-        catch (const std::exception &e)
+        catch (const exception &e)
         {
-            cout << "Error: " << e.what() << "\n"; // Catch and display errors
+            cout << "Error: " << e.what() << "\n";
         }
     }
 

@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <map>
 #include <string>
+#include <fstream>
 
 using namespace std;
 
@@ -332,19 +333,35 @@ bool Database::deleteFrom(const std::string &tableName,
     return deleted;
 }
 
-string Database::select(const string &, const string &column, const string &value) const
+// Add key-value pair to the database
+void Database::addKeyValuePair(const std::string &key, const std::string &value)
 {
-    for (const auto &table : tables)
+    data[key] = value;
+    std::cout << "Inserted: " << key << " -> " << value << std::endl;
+}
+
+// Retrieve key-value pair from the database
+std::string Database::retrieveKeyValuePair(const std::string &key, const std::string &value)
+{
+    if (data.find(key) != data.end() && data[key] == value)
     {
-        for (const auto &row : table.second.rows)
-        {
-            if (row[0] == column && row[1] == value)
-            {
-                return row[1];
-            }
-        }
+        return "Found: " + key + " -> " + value;
     }
-    return "Not found.";
+    return "Error: Value not found.";
+}
+
+// Remove key-value pair from the database
+void Database::removeKeyValuePair(const std::string &key, const std::string &value)
+{
+    if (data.find(key) != data.end() && data[key] == value)
+    {
+        data.erase(key);
+        std::cout << "Removed: " << key << " -> " << value << std::endl;
+    }
+    else
+    {
+        std::cout << "Error: No such key-value pair to remove." << std::endl;
+    }
 }
 
 void Database::createTable(const std::string &table, const std::vector<std::pair<std::string, std::string>> &columns)
@@ -878,70 +895,211 @@ bool Database::groupBy(const std::string &tableName, const std::string &columnNa
     return true;
 }
 
-void Database::order(const string &key)
+void Database::order(const std::string &tableName, const std::string &columnName, bool ascending)
 {
-    orderedKeys.clear();
-    for (const auto &table : tables)
+    if (tables.find(tableName) == tables.end())
     {
-        for (const auto &row : table.second.rows)
+        std::cout << "Error: Table '" << tableName << "' not found.\n";
+        return;
+    }
+
+    Table &table = tables[tableName];
+
+    // Find index of the column
+    int colIndex = -1;
+    for (size_t i = 0; i < table.columns.size(); ++i)
+    {
+        if (table.columns[i].first == columnName)
         {
-            orderedKeys.push_back(row[0]);
+            colIndex = static_cast<int>(i);
+            break;
         }
     }
-    sort(orderedKeys.begin(), orderedKeys.end());
-    for (size_t i = 0; i < orderedKeys.size(); ++i)
+
+    if (colIndex == -1)
     {
-        cout << orderedKeys[i] << " -> " << orderedKeys[i] << endl;
+        std::cout << "Error: Column '" << columnName << "' not found in table '" << tableName << "'.\n";
+        return;
     }
+
+    // Sort table.rows in-place
+    std::sort(table.rows.begin(), table.rows.end(), [colIndex, ascending](const std::vector<std::string> &a, const std::vector<std::string> &b)
+              {
+        if (ascending)
+            return a[colIndex] < b[colIndex];
+        else
+            return a[colIndex] > b[colIndex]; });
+
+    std::cout << "Table '" << tableName << "' ordered by column '" << columnName << "' in " << (ascending ? "ASC" : "DESC") << " order.\n";
 }
 
-void Database::match(const string &pattern)
+void Database::match(const std::string &tableName, const std::string &columnName, const std::string &pattern)
 {
-    for (const auto &table : tables)
+    auto it = tables.find(tableName);
+    if (it == tables.end())
     {
-        for (const auto &row : table.second.rows)
+        std::cout << "Error: Table '" << tableName << "' not found.\n";
+        return;
+    }
+
+    const Table &table = it->second;
+
+    // Find index of the target column
+    int columnIndex = -1;
+    for (size_t i = 0; i < table.columns.size(); ++i)
+    {
+        if (table.columns[i].first == columnName)
         {
-            if (row[0].find(pattern) != string::npos || row[1].find(pattern) != string::npos)
+            columnIndex = i;
+            break;
+        }
+    }
+
+    if (columnIndex == -1)
+    {
+        std::cout << "Error: Column '" << columnName << "' not found in table '" << tableName << "'.\n";
+        return;
+    }
+
+    bool matchFound = false;
+    for (const auto &row : table.rows)
+    {
+        if (row[columnIndex].find(pattern) != std::string::npos)
+        {
+            matchFound = true;
+            // Print entire row
+            for (size_t i = 0; i < row.size(); ++i)
             {
-                cout << row[0] << " -> " << row[1] << endl;
+                std::cout << row[i];
+                if (i != row.size() - 1)
+                    std::cout << " | ";
             }
+            std::cout << "\n";
         }
+    }
+
+    if (!matchFound)
+    {
+        std::cout << "No match found for pattern \"" << pattern << "\" in column '" << columnName << "'.\n";
     }
 }
 
-void Database::limit(int limit)
+void Database::limit(const std::string &tableName, int limit)
 {
+    auto it = tables.find(tableName);
+    if (it == tables.end())
+    {
+        std::cout << "Error: Table '" << tableName << "' not found.\n";
+        return;
+    }
+
+    const Table &table = it->second;
+
     int count = 0;
-    for (const auto &table : tables)
+    for (const auto &row : table.rows)
     {
-        for (const auto &row : table.second.rows)
+        if (count >= limit)
+            break;
+
+        for (size_t i = 0; i < row.size(); ++i)
         {
-            if (count >= limit)
-                return;
-            cout << row[0] << " -> " << row[1] << endl;
-            ++count;
+            std::cout << row[i];
+            if (i != row.size() - 1)
+                std::cout << " | ";
+        }
+        std::cout << "\n";
+        ++count;
+    }
+
+    if (count == 0)
+    {
+        std::cout << "No rows to display from table '" << tableName << "'.\n";
+    }
+}
+
+void Database::distinct(const std::string &tableName, const std::string &columnName)
+{
+    auto it = tables.find(tableName);
+    if (it == tables.end())
+    {
+        std::cout << "Error: Table '" << tableName << "' not found.\n";
+        return;
+    }
+
+    const Table &table = it->second;
+    const auto &columns = table.columns;
+
+    // Find the index of the target column
+    int columnIndex = -1;
+    for (size_t i = 0; i < columns.size(); ++i)
+    {
+        if (columns[i].first == columnName)
+        {
+            columnIndex = static_cast<int>(i);
+            break;
+        }
+    }
+
+    if (columnIndex == -1)
+    {
+        std::cout << "Error: Column '" << columnName << "' not found in table '" << tableName << "'.\n";
+        return;
+    }
+
+    std::unordered_set<std::string> seen;
+    for (const auto &row : table.rows)
+    {
+        const std::string &value = row[columnIndex];
+        if (seen.insert(value).second) // if value was not already present
+        {
+            for (size_t i = 0; i < row.size(); ++i)
+            {
+                std::cout << row[i];
+                if (i != row.size() - 1)
+                    std::cout << " | ";
+            }
+            std::cout << "\n";
         }
     }
 }
 
-void Database::distinct()
+void Database::createIndex(const std::string &tableName, const std::string &columnName)
 {
-    unordered_set<string> unique;
-    for (const auto &table : tables)
+    // Step 1: Check if the table exists
+    auto tableIt = tables.find(tableName);
+    if (tableIt == tables.end())
     {
-        for (const auto &row : table.second.rows)
+        std::cout << "Error: Table '" << tableName << "' does not exist.\n";
+        return;
+    }
+
+    // Step 2: Check if the column exists in the table
+    const Table &table = tableIt->second;
+    int columnIndex = -1;
+    for (size_t i = 0; i < table.columns.size(); ++i)
+    {
+        if (table.columns[i].first == columnName) // Check column name
         {
-            unique.insert(row[0]);
+            columnIndex = i;
+            break;
         }
     }
-    for (const auto &item : unique)
-    {
-        cout << item << endl;
-    }
-}
 
-void Database::createIndex(const string &key)
-{
-    index.insert(key);
-    cout << "Created index for: " << key << endl;
+    if (columnIndex == -1)
+    {
+        std::cout << "Error: Column '" << columnName << "' does not exist in table '" << tableName << "'.\n";
+        return;
+    }
+
+    // Step 3: Create the index for the specified column
+    // We will use a map to store the index for the column
+    // The key will be the column's value, and the value will be a list of rows that have this value in the specified column
+
+    for (const auto &row : table.rows)
+    {
+        const std::string &columnValue = row[columnIndex]; // Get the value from the specified column
+        indexes[tableName][columnName][columnValue].push_back(row);
+    }
+
+    std::cout << "Created index for column '" << columnName << "' in table '" << tableName << "'.\n";
 }

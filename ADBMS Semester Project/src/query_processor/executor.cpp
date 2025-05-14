@@ -51,7 +51,7 @@ void Executor::executeCommand(const std::string &commandLine)
     else if (command == "LIMIT")
         executeLimit(args);
     else if (command == "DISTINCT")
-        executeDistinct();
+        executeDistinct(args);
     else if (command == "CREATE_INDEX")
         executeCreateIndex(args);
     else if (command == "UPDATE")
@@ -64,6 +64,7 @@ void Executor::executeCommand(const std::string &commandLine)
         std::cout << "Unknown command: " << command << std::endl;
 }
 
+// PUT Command - Insert a key-value pair
 void Executor::executePut(const std::vector<std::string> &args)
 {
     if (args.size() < 2)
@@ -71,9 +72,11 @@ void Executor::executePut(const std::vector<std::string> &args)
         std::cout << "Usage: PUT <key> <value>\n";
         return;
     }
-    db.insert(args[0], args[1]);
+    // Call the method to add the key-value pair
+    db.addKeyValuePair(args[0], args[1]);
 }
 
+// GET Command - Retrieve a key-value pair
 void Executor::executeGet(const std::vector<std::string> &args)
 {
     if (args.size() < 2)
@@ -81,9 +84,11 @@ void Executor::executeGet(const std::vector<std::string> &args)
         std::cout << "Usage: GET <column> <value>\n";
         return;
     }
-    std::cout << db.select("Default", args[0], args[1]) << std::endl;
+    // Call the method to retrieve the key-value pair
+    std::cout << db.retrieveKeyValuePair(args[0], args[1]) << std::endl;
 }
 
+// REMOVE Command - Remove a key-value pair
 void Executor::executeRemove(const std::vector<std::string> &args)
 {
     if (args.size() < 2)
@@ -91,7 +96,8 @@ void Executor::executeRemove(const std::vector<std::string> &args)
         std::cout << "Usage: REMOVE <column> <value>\n";
         return;
     }
-    db.deleteFrom("Default", args[0], args[1]);
+    // Call the method to remove the key-value pair
+    db.removeKeyValuePair(args[0], args[1]);
 }
 
 void Executor::executeShow()
@@ -248,50 +254,104 @@ void Executor::executeGroupBy(const std::vector<std::string> &args)
 
 void Executor::executeOrder(const std::vector<std::string> &args)
 {
-    if (args.size() < 3)
+    if (args.size() != 3)
     {
         std::cout << "Usage: ORDER <table> <column> ASC|DESC\n";
         return;
     }
-    db.order(args[1]);
+
+    std::string tableName = args[0];
+    std::string columnName = args[1];
+    std::string order = args[2];
+
+    bool ascending;
+    if (order == "ASC")
+    {
+        ascending = true;
+    }
+    else if (order == "DESC")
+    {
+        ascending = false;
+    }
+    else
+    {
+        std::cout << "Error: Order must be either ASC or DESC.\n";
+        return;
+    }
+
+    db.order(tableName, columnName, ascending);
 }
 
 void Executor::executeMatch(const std::vector<std::string> &args)
 {
-    if (args.size() < 2)
+    if (args.size() < 3)
     {
-        std::cout << "Usage: MATCH <pattern>\n";
+        std::cout << "Usage: MATCH <table> <column> <pattern>\n";
         return;
     }
-    db.match(args[1]);
+
+    std::string tableName = args[0];
+    std::string columnName = args[1];
+    std::string pattern = args[2];
+
+    // Remove quotes if present
+    if (pattern.front() == '"' && pattern.back() == '"')
+    {
+        pattern = pattern.substr(1, pattern.length() - 2);
+    }
+
+    db.match(tableName, columnName, pattern);
 }
 
 void Executor::executeLimit(const std::vector<std::string> &args)
 {
     if (args.size() < 2)
     {
-        std::cout << "Usage: LIMIT <count>\n";
+        std::cout << "Usage: LIMIT <table> <count>\n";
         return;
     }
-    db.limit(std::atoi(args[1].c_str()));
+
+    std::string tableName = args[0];
+    int count = std::atoi(args[1].c_str());
+
+    db.limit(tableName, count);
 }
 
-void Executor::executeDistinct()
+void Executor::executeDistinct(const std::vector<std::string> &args)
 {
-    db.distinct();
+    if (args.size() < 2)
+    {
+        std::cout << "Usage: DISTINCT <table> <column>\n";
+        return;
+    }
+
+    std::string tableName = args[0];
+    std::string columnName = args[1];
+
+    db.distinct(tableName, columnName);
 }
 
 void Executor::executeCreateIndex(const std::vector<std::string> &args)
 {
-    if (args.size() < 2)
+    std::cout << "Arguments: ";
+    for (const auto &arg : args)
+        std::cout << arg << " ";
+    std::cout << std::endl;
+
+    // Ensure there are exactly two arguments: table name and column name
+    if (args.size() != 2)
     {
-        std::cout << "Usage: CREATE_INDEX <key>\n";
+        std::cout << "Usage: CREATE_INDEX <table> <column>\n";
         return;
     }
-    db.createIndex(args[1]);
-}
 
-#include <algorithm> // Add this at the top of executor.cpp
+    // Extract the table name and column name
+    std::string tableName = args[0];  // First argument is table name
+    std::string columnName = args[1]; // Second argument is column name
+
+    // Call the database method to create the index
+    db.createIndex(tableName, columnName);
+}
 
 void Executor::executeUpdate(const std::vector<std::string> &args)
 {

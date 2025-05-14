@@ -54,7 +54,7 @@ private:
     void executeOrder(const std::vector<std::string> &args);
     void executeMatch(const std::vector<std::string> &args);
     void executeLimit(const std::vector<std::string> &args);
-    void executeDistinct();
+    void executeDistinct(const std::vector<std::string> &args);
     void executeCreateIndex(const std::vector<std::string> &args);
     void executeUpdate(const std::vector<std::string> &args);
     void executeDelete(const std::vector<std::string> &args);
