@@ -24,6 +24,10 @@ public:
     bool deleteFrom(const std::string &table, const std::string &conditionColumn, const std::string &conditionValue);
     std::string select(const std::string &table, const std::string &column, const std::string &conditionValue) const;
 
+    void createTable(const std::string &table, const std::vector<std::pair<std::string, std::string>> &columns);
+    bool insertIntoTable(const std::string &table, const std::vector<std::string> &values);
+    std::string selectFromTable(const std::string &columns, const std::string &table);
+
     void join(const std::string &key1, const std::string &key2);
     void groupBy(const std::string &key);
     void order(const std::string &key);
@@ -33,8 +37,14 @@ public:
     void createIndex(const std::string &key);
 
 private:
+    struct Table
+    {
+        std::vector<std::pair<std::string, std::string>> columns;
+        std::vector<std::vector<std::string>> rows;
+    };
+
     std::string databaseName;
-    std::unordered_map<std::string, std::string> data;
+    std::unordered_map<std::string, Table> tables;
     std::unordered_set<std::string> index;
     std::vector<std::string> orderedKeys;
 };

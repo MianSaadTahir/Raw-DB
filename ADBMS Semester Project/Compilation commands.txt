@@ -2,7 +2,7 @@ RUN ALL OF THESE ONE BY ONE FOR TESTING COMPONENTS AT THE AREA AFTER THE FOLDER 
 C:\Users\Talha\Desktop\UET\SEMESTER 4\ADBMS\ADBMS Lab\ADBMS Semester Project
 
 
-g++ main/main.cpp src/file_manager/file_manager.cpp src/buffer_pool/buffer_pool.cpp src/indexing/b_plus_tree.cpp src/storage_engine/storage_engine.cpp src/page/page.cpp -Iinclude -o main.exe
+g++ main/main.cpp src/file_manager/file_manager.cpp src/buffer_pool/buffer_pool.cpp src/indexing/b_plus_tree.cpp src/storage_engine/storage_engine.cpp src/page/page.cpp src/query_processor/executor.cpp src/query_processor/parser.cpp src/schema/table.cpp src/security/access_control.cpp src/backup_recovery/recovery.cpp src/database/database.cpp -Iinclude -o main.exe
 main.exe
 
 

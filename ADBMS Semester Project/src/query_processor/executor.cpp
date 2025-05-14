@@ -21,8 +21,10 @@ void Executor::executeCommand(const std::string &commandLine)
         executeGet(args);
     else if (command == "REMOVE")
         executeRemove(args);
-    else if (command == "SHOW")
-        executeShow();
+    else if (command == "SHOWDATABASE")
+        db.showDatabase();
+    else if (command == "SHOWTABLES")
+        db.showAllData();
     else if (command == "FLUSH")
         executeFlush();
     else if (command == "EXIT")
@@ -31,6 +33,10 @@ void Executor::executeCommand(const std::string &commandLine)
         executeCreateDatabase(args);
     else if (command == "ALTER_DATABASE")
         executeAlterDatabase(args);
+    else if (command == "CREATE_TABLE")
+        executeCreateTable(args);
+    else if (command == "INSERT")
+        executeInsert(args);
     else if (command == "JOIN")
         executeJoin(args);
     else if (command == "GROUP_BY")
@@ -59,7 +65,7 @@ void Executor::executePut(const std::vector<std::string> &args)
 {
     if (args.size() < 2)
     {
-        std::cout << "PUT <key> <value>\n";
+        std::cout << "Usage: PUT <key> <value>\n";
         return;
     }
     db.insert(args[0], args[1]);
@@ -67,6 +73,11 @@ void Executor::executePut(const std::vector<std::string> &args)
 
 void Executor::executeGet(const std::vector<std::string> &args)
 {
+    if (args.size() < 2)
+    {
+        std::cout << "Usage: GET <column> <value>\n";
+        return;
+    }
     std::cout << db.select("Default", args[0], args[1]) << std::endl;
 }
 
@@ -74,7 +85,7 @@ void Executor::executeRemove(const std::vector<std::string> &args)
 {
     if (args.size() < 2)
     {
-        std::cout << "REMOVE <column> <value>\n";
+        std::cout << "Usage: REMOVE <column> <value>\n";
         return;
     }
     db.deleteFrom("Default", args[0], args[1]);
@@ -100,7 +111,7 @@ void Executor::executeCreateDatabase(const std::vector<std::string> &args)
 {
     if (args.empty())
     {
-        std::cout << "CREATE_DATABASE <name>\n";
+        std::cout << "Usage: CREATE_DATABASE <name>\n";
         return;
     }
     db.createDatabase(args[0]);
@@ -110,17 +121,61 @@ void Executor::executeAlterDatabase(const std::vector<std::string> &args)
 {
     if (args.empty())
     {
-        std::cout << "ALTER_DATABASE <name>\n";
+        std::cout << "Usage: ALTER_DATABASE <name>\n";
         return;
     }
     db.alterDatabase(args[0]);
+}
+
+void Executor::executeCreateTable(const std::vector<std::string> &args)
+{
+    if (args.size() < 2)
+    {
+        std::cout << "Usage: CREATE_TABLE <table_name> <column1:type1> <column2:type2> ...\n";
+        return;
+    }
+
+    std::string tableName = args[0];
+    std::vector<std::pair<std::string, std::string>> columns;
+
+    for (size_t i = 1; i < args.size(); ++i)
+    {
+        size_t pos = args[i].find(':');
+        if (pos == std::string::npos)
+        {
+            std::cout << "Invalid column definition: " << args[i] << "\n";
+            return;
+        }
+        std::string colName = args[i].substr(0, pos);
+        std::string colType = args[i].substr(pos + 1);
+        columns.push_back(std::make_pair(colName, colType));
+    }
+
+    db.createTable(tableName, columns);
+}
+
+void Executor::executeInsert(const std::vector<std::string> &args)
+{
+    if (args.size() < 2)
+    {
+        std::cout << "Usage: INSERT <table> <val1> <val2> ...\n";
+        return;
+    }
+
+    std::string tableName = args[0];
+    std::vector<std::string> values(args.begin() + 1, args.end());
+
+    if (!db.insertIntoTable(tableName, values))
+    {
+        std::cout << "Table <" << tableName << "> not found.\n";
+    }
 }
 
 void Executor::executeJoin(const std::vector<std::string> &args)
 {
     if (args.size() < 2)
     {
-        std::cout << "JOIN <key1> <key2>\n";
+        std::cout << "Usage: JOIN <table1> <table2>\n";
         return;
     }
     db.join(args[0], args[1]);
@@ -128,42 +183,42 @@ void Executor::executeJoin(const std::vector<std::string> &args)
 
 void Executor::executeGroupBy(const std::vector<std::string> &args)
 {
-    if (args.empty())
+    if (args.size() < 2)
     {
-        std::cout << "GROUP_BY <key>\n";
+        std::cout << "Usage: GROUP_BY <table> <column>\n";
         return;
     }
-    db.groupBy(args[0]);
+    db.groupBy(args[1]);
 }
 
 void Executor::executeOrder(const std::vector<std::string> &args)
 {
-    if (args.empty())
+    if (args.size() < 3)
     {
-        std::cout << "ORDER <key>\n";
+        std::cout << "Usage: ORDER <table> <column> ASC|DESC\n";
         return;
     }
-    db.order(args[0]);
+    db.order(args[1]);
 }
 
 void Executor::executeMatch(const std::vector<std::string> &args)
 {
-    if (args.empty())
+    if (args.size() < 2)
     {
-        std::cout << "MATCH <pattern>\n";
+        std::cout << "Usage: MATCH <pattern>\n";
         return;
     }
-    db.match(args[0]);
+    db.match(args[1]);
 }
 
 void Executor::executeLimit(const std::vector<std::string> &args)
 {
-    if (args.empty())
+    if (args.size() < 2)
     {
-        std::cout << "LIMIT <count>\n";
+        std::cout << "Usage: LIMIT <count>\n";
         return;
     }
-    db.limit(std::atoi(args[0].c_str()));
+    db.limit(std::atoi(args[1].c_str()));
 }
 
 void Executor::executeDistinct()
@@ -173,31 +228,33 @@ void Executor::executeDistinct()
 
 void Executor::executeCreateIndex(const std::vector<std::string> &args)
 {
-    if (args.empty())
+    if (args.size() < 2)
     {
-        std::cout << "CREATE_INDEX <key>\n";
+        std::cout << "Usage: CREATE_INDEX <key>\n";
         return;
     }
-    db.createIndex(args[0]);
+    db.createIndex(args[1]);
 }
 
 void Executor::executeUpdate(const std::vector<std::string> &args)
 {
-    if (args.size() < 9)
+    if (args.size() < 6)
     {
-        std::cout << "UPDATE <table> SET <column> = <value> WHERE <col> <op> <val>\n";
+        std::cout << "Usage: UPDATE <table> SET <column> = <value> WHERE <column> = <value>\n";
         return;
     }
-    db.update(args[0], args[2], args[4], args[6], args[8], args[7]);
+
+    db.update(args[0], args[2], args[4], args[6], args[8], "=");
 }
 
 void Executor::executeDelete(const std::vector<std::string> &args)
 {
     if (args.size() < 3)
     {
-        std::cout << "DELETE FROM <table> WHERE <column> <value>\n";
+        std::cout << "Usage: DELETE <table> WHERE <column> = <value>\n";
         return;
     }
+
     db.deleteFrom(args[0], args[1], args[2]);
 }
 
@@ -205,8 +262,20 @@ void Executor::executeSelect(const std::vector<std::string> &args)
 {
     if (args.size() < 3)
     {
-        std::cout << "SELECT <table> <column> <value>\n";
+        std::cout << "Usage: SELECT <column> FROM <table>\n";
         return;
     }
-    std::cout << db.select(args[0], args[1], args[2]) << std::endl;
+
+    std::string tableName = args[2];
+    std::string column = args[0];
+
+    std::string result = db.selectFromTable(column, tableName);
+    if (result.empty())
+    {
+        std::cout << "Table <" << tableName << "> not found.\n";
+    }
+    else
+    {
+        std::cout << result << std::endl;
+    }
 }

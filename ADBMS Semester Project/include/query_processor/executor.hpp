@@ -10,11 +10,14 @@ enum class CommandType
     PUT,
     GET,
     REMOVE,
-    SHOW,
+    SHOWDATABASE,
+    SHOWTABLES,
     FLUSH,
     EXIT,
     CREATE_DATABASE,
     ALTER_DATABASE,
+    CREATE_TABLE,
+    INSERT,
     JOIN,
     GROUP_BY,
     ORDER,
@@ -44,6 +47,8 @@ private:
     void executeExit();
     void executeCreateDatabase(const std::vector<std::string> &args);
     void executeAlterDatabase(const std::vector<std::string> &args);
+    void executeCreateTable(const std::vector<std::string> &args);
+    void executeInsert(const std::vector<std::string> &args);
     void executeJoin(const std::vector<std::string> &args);
     void executeGroupBy(const std::vector<std::string> &args);
     void executeOrder(const std::vector<std::string> &args);

@@ -1,98 +1,102 @@
 #include <iostream>
-#include "../include/storage_engine/storage_engine.hpp" // Include only the StorageEngine header
+#include <string>
+#include "../include/query_processor/executor.hpp"
+#include "../include/security/access_control.hpp"
+#include "../include/database/database.hpp"
 
-using namespace rdbms;
 using namespace std;
+using namespace rdbms;
+
+void showCommands()
+{
+    cout << "\nAvailable Commands:\n"
+         << "  CREATE_DATABASE <name>\n"
+         << "  CREATE_TABLE <table> <col1> <col2> ...\n"
+         << "  INSERT <table> <val1> <val2> ...\n"
+         << "  SELECT <columns> FROM <table>\n"
+         << "  DELETE <table> WHERE <col> = <val>\n"
+         << "  UPDATE <table> SET <col> = <val> WHERE <col> = <val>\n"
+         << "  JOIN <table1> <table2> ON <col1> = <col2>\n"
+         << "  GROUP_BY <table> <column>\n"
+         << "  ORDER <table> <column> ASC|DESC\n"
+         << "  MATCH <table> <column> <value>\n"
+         << "  LIMIT <table> <n>\n"
+         << "  DISTINCT <table> <column>\n"
+         << "  CREATE_INDEX <table> <column>\n"
+         << "  BACKUP <backup_path>\n"
+         << "  RESTORE <backup_path>\n"
+         << "  SHOWDATABASE\n"
+         << "  SHOWTABLES\n"
+         << "  FLUSH\n"
+         << "  PUT <key> <value>\n"
+         << "  GET <key>\n"
+         << "  REMOVE <key>\n"
+         << "  HELP\n"
+         << "  EXIT\n";
+}
 
 int main()
 {
-    // ============================================================
-    //                  CUSTOM RELATIONAL DATABASE SYSTEM
-    // ============================================================
+    cout << "===================================\n";
+    cout << "  Welcome to Custom RDBMS Console  \n";
+    cout << "===================================\n";
 
-    cout << "============================================================\n";
-    cout << "         WELCOME TO CUSTOM RELATIONAL DATABASE SYSTEM        \n";
-    cout << "============================================================\n";
+    AccessControl accessControl;
+    accessControl.addUser("admin", "admin123", Role::ADMIN);
+    accessControl.addUser("guest", "guest123", Role::GUEST);
 
-    // Step 1: Initialize the Storage Engine
-    cout << "\n[Step 1] Initializing the Storage Engine for table: 'students'...\n";
-    StorageEngine engine("students");
+    string username, password;
+    cout << "\nLogin\n------\n";
+    cout << "Username: ";
+    cin >> username;
+    cout << "Password: ";
+    cin >> password;
 
-    /*
-        The StorageEngine internally initializes:
-        - FileManager: Handles file operations for reading/writing pages
-        - BufferPool: Manages limited memory cache with LRU replacement
-        - B+ Tree Index: Enables efficient indexing and searching by key
-    */
+    if (!accessControl.authenticate(username, password))
+    {
+        cout << "❌ Authentication failed. Exiting...\n";
+        return 1;
+    }
 
-    // Step 2: Insert Records
-    cout << "\n[Step 2] Inserting records into the 'students' table...\n";
+    Role userRole = accessControl.getUserRole(username);
+    cout << "✅ Login successful. Role: " << (userRole == Role::ADMIN ? "Admin" : "Guest") << "\n";
 
-    engine.insert(12, "Twelve");
-    engine.insert(10, "Ten");
-    engine.insert(5, "Five");
-    engine.insert(6, "Six");
-    engine.insert(7, "Seven");
-    engine.insert(17, "Seventeen");
-    engine.insert(20, "Twenty");
-    engine.insert(30, "Thirty");
+    Database database;
+    Executor executor(database);
 
-    /*
-        Each insert operation:
-        - Adds the key-value pair to the B+ Tree index
-        - Writes the data to the appropriate page in the BufferPool
-        - Evicts the least recently used page if memory is full
-    */
+    cin.ignore(); // clear input buffer
+    string input;
+    showCommands();
 
-    // Step 3: Print Current Database State
-    cout << "\n[Step 3] Displaying database state (storage and indexing info):\n";
-    engine.printStorage();
+    while (true)
+    {
+        cout << "\n>>> ";
+        getline(cin, input);
 
-    /*
-        Shows:
-        - B+ Tree structure: how data is indexed
-        - BufferPool contents: which pages are currently in memory
-        - LRU Order: recently used vs older pages
-    */
+        if (input.empty())
+            continue;
 
-    // Step 4: Search Records
-    cout << "\n[Step 4] Searching records using B+ Tree index:\n";
+        if (input == "EXIT" || input == "exit" || input == "quit")
+        {
+            cout << "👋 Exiting database. Goodbye!\n";
+            break;
+        }
 
-    string result1 = engine.search(12);
-    string result2 = engine.search(21); // This key was never inserted
+        if (input == "HELP" || input == "help")
+        {
+            showCommands();
+            continue;
+        }
 
-    cout << "Search for key 12: " << result1 << endl;
-    cout << "Search for key 21: " << result2 << endl;
-
-    /*
-        The search uses the B+ Tree to locate the page,
-        then retrieves the value from that page.
-        If page is not in memory, it loads it from disk.
-    */
-
-    // Step 5: Flush All Pages to Disk
-    cout << "\n[Step 5] Flushing all in-memory pages to disk...\n";
-    engine.flushAll();
-
-    /*
-        Flush ensures:
-        - All dirty pages in BufferPool are written to disk
-        - No data is lost if program terminates
-    */
-
-    // Step 6: Final Database State
-    cout << "\n[Step 6] Database state after flushing to disk:\n";
-    engine.printStorage();
-
-    /*
-        After flushing, memory and disk are consistent.
-        Pages on disk reflect all the inserted/updated values.
-    */
-
-    // End of Demonstration
-    cout << "\n============================================================\n";
-    cout << "                  END OF DATABASE DEMO                      \n";
-    cout << "============================================================\n";
+        try
+        {
+            executor.executeCommand(input);
+        }
+        catch (const std::exception &e)
+        {
+            cout << "❌ Error: " << e.what() << "\n";
+        }
+    }
 
     return 0;
 }
