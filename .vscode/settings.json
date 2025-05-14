@@ -4,6 +4,7 @@
         "iosfwd": "cpp",
         "fstream": "cpp",
         "xhash": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "vector": "cpp"
     }
 }
