@@ -3,10 +3,12 @@
 #include <sstream>
 #include <algorithm>
 #include <cstdlib>
+#include <map>
+#include <string>
 
 using namespace std;
 
-Database::Database() : databaseName("Default") {}
+Database::Database() : databaseActive(false) {}
 
 Database::~Database()
 {
@@ -17,7 +19,8 @@ void Database::createDatabase(const string &name)
 {
     databaseName = name;
     tables.clear();
-    cout << "Created database: " << name << endl;
+    databaseActive = true;
+    cout << "Database " << name << " created and set as active.\n";
 }
 
 void Database::alterDatabase(const string &name)
@@ -83,48 +86,250 @@ bool Database::insert(const string &key, const string &value)
     return true;
 }
 
-bool Database::update(const string &, const string &column, const string &newValue,
-                      const string &conditionColumn, const string &conditionValue, const string &operatorStr)
+bool Database::update(const std::string &tableName,
+                      const std::string &targetColumn,
+                      const std::string &newValue,
+                      const std::string &conditionColumn,
+                      const std::string &conditionValue,
+                      const std::string &operatorStr)
 {
-    for (auto &table : tables)
+    auto it = tables.find(tableName);
+    if (it == tables.end())
     {
-        for (auto &row : table.second.rows)
+        std::cout << "Table <" << tableName << "> not found.\n";
+        return false;
+    }
+
+    Table &table = it->second;
+    int targetColIndex = -1;
+    int condColIndex = -1;
+    std::string condColType;
+
+    for (size_t i = 0; i < table.columns.size(); ++i)
+    {
+        if (table.columns[i].first == targetColumn)
+            targetColIndex = static_cast<int>(i);
+        if (table.columns[i].first == conditionColumn)
         {
-            if (row[0] == conditionColumn)
-            {
-                if ((operatorStr == "=" && row[1] == conditionValue) ||
-                    (operatorStr == "!=" && row[1] != conditionValue))
-                {
-                    row[1] = newValue;
-                    cout << "Updated: " << row[0] << " -> " << newValue << endl;
-                    return true;
-                }
-            }
+            condColIndex = static_cast<int>(i);
+            condColType = table.columns[i].second;
         }
     }
-    return false;
+
+    if (targetColIndex == -1 || condColIndex == -1)
+    {
+        std::cout << "Invalid column(s).\n";
+        return false;
+    }
+
+    bool updated = false;
+
+    for (auto &row : table.rows)
+    {
+        std::string cell = row[condColIndex];
+        bool match = false;
+
+        if (condColType == "INT" || condColType == "BOOL")
+        {
+            int lhs = std::atoi(cell.c_str());
+            int rhs = std::atoi(conditionValue.c_str());
+
+            if (operatorStr == "=")
+                match = lhs == rhs;
+            else if (operatorStr == "!=")
+                match = lhs != rhs;
+            else if (operatorStr == "<")
+                match = lhs < rhs;
+            else if (operatorStr == ">")
+                match = lhs > rhs;
+            else if (operatorStr == "<=")
+                match = lhs <= rhs;
+            else if (operatorStr == ">=")
+                match = lhs >= rhs;
+        }
+        else if (condColType == "FLOAT")
+        {
+            float lhs = std::atof(cell.c_str());
+            float rhs = std::atof(conditionValue.c_str());
+
+            if (operatorStr == "=")
+                match = lhs == rhs;
+            else if (operatorStr == "!=")
+                match = lhs != rhs;
+            else if (operatorStr == "<")
+                match = lhs < rhs;
+            else if (operatorStr == ">")
+                match = lhs > rhs;
+            else if (operatorStr == "<=")
+                match = lhs <= rhs;
+            else if (operatorStr == ">=")
+                match = lhs >= rhs;
+        }
+        else // STRING
+        {
+            if (operatorStr == "=")
+                match = cell == conditionValue;
+            else if (operatorStr == "!=")
+                match = cell != conditionValue;
+            // optionally implement lexicographic <, > if needed
+        }
+
+        if (match)
+        {
+            row[targetColIndex] = newValue;
+            std::cout << "Updated row: ";
+            for (const auto &val : row)
+                std::cout << val << " ";
+            std::cout << "\n";
+            updated = true;
+        }
+    }
+
+    return updated;
 }
 
-bool Database::deleteFrom(const string &, const string &column, const string &value)
+bool Database::deleteFrom(const std::string &tableName,
+                          const std::string &conditionColumn,
+                          const std::string &conditionValue)
 {
-    bool found = false;
-    for (auto &table : tables)
+    auto it = tables.find(tableName);
+    if (it == tables.end())
     {
-        for (auto it = table.second.rows.begin(); it != table.second.rows.end();)
+        std::cout << "Table <" << tableName << "> not found.\n";
+        return false;
+    }
+
+    Table &table = it->second;
+    int condColIndex = -1;
+    std::string condColType;
+
+    for (size_t i = 0; i < table.columns.size(); ++i)
+    {
+        if (table.columns[i].first == conditionColumn)
         {
-            if (it->at(0) == column && it->at(1) == value)
-            {
-                cout << "Deleted: " << it->at(0) << " -> " << it->at(1) << endl;
-                it = table.second.rows.erase(it);
-                found = true;
-            }
-            else
-            {
-                ++it;
-            }
+            condColIndex = static_cast<int>(i);
+            condColType = table.columns[i].second;
+            break;
         }
     }
-    return found;
+
+    if (condColIndex == -1)
+    {
+        std::cout << "Column <" << conditionColumn << "> not found in table <" << tableName << ">.\n";
+        return false;
+    }
+
+    // Extract operator and actual value (supports =, !=, <, >, <=, >=)
+    std::string op = "=";
+    std::string actualValue = conditionValue;
+
+    if (conditionValue.size() >= 2)
+    {
+        if (conditionValue.substr(0, 2) == ">=")
+        {
+            op = ">=";
+            actualValue = conditionValue.substr(2);
+        }
+        else if (conditionValue.substr(0, 2) == "<=")
+        {
+            op = "<=";
+            actualValue = conditionValue.substr(2);
+        }
+        else if (conditionValue.substr(0, 2) == "!=")
+        {
+            op = "!=";
+            actualValue = conditionValue.substr(2);
+        }
+        else if (conditionValue[0] == '<')
+        {
+            op = "<";
+            actualValue = conditionValue.substr(1);
+        }
+        else if (conditionValue[0] == '>')
+        {
+            op = ">";
+            actualValue = conditionValue.substr(1);
+        }
+        else if (conditionValue[0] == '=')
+        {
+            op = "=";
+            actualValue = conditionValue.substr(1);
+        }
+    }
+
+    bool deleted = false;
+
+    for (auto it = table.rows.begin(); it != table.rows.end();)
+    {
+        std::string cell = it->at(condColIndex);
+        bool match = false;
+
+        std::string type = condColType;
+        for (size_t i = 0; i < type.size(); ++i)
+            type[i] = std::toupper(type[i]);
+
+        if (type == "INT" || type == "BOOL")
+        {
+            int lhs = std::atoi(cell.c_str());
+            int rhs = std::atoi(actualValue.c_str());
+
+            if (op == "=")
+                match = lhs == rhs;
+            else if (op == "!=")
+                match = lhs != rhs;
+            else if (op == "<")
+                match = lhs < rhs;
+            else if (op == ">")
+                match = lhs > rhs;
+            else if (op == "<=")
+                match = lhs <= rhs;
+            else if (op == ">=")
+                match = lhs >= rhs;
+        }
+        else if (type == "FLOAT")
+        {
+            float lhs = std::atof(cell.c_str());
+            float rhs = std::atof(actualValue.c_str());
+
+            if (op == "=")
+                match = lhs == rhs;
+            else if (op == "!=")
+                match = lhs != rhs;
+            else if (op == "<")
+                match = lhs < rhs;
+            else if (op == ">")
+                match = lhs > rhs;
+            else if (op == "<=")
+                match = lhs <= rhs;
+            else if (op == ">=")
+                match = lhs >= rhs;
+        }
+        else // STRING
+        {
+            if (op == "=")
+                match = cell == actualValue;
+            else if (op == "!=")
+                match = cell != actualValue;
+            // Optionally handle lexicographic comparison for strings
+        }
+
+        if (match)
+        {
+            std::cout << "Deleted row: ";
+            for (const auto &val : *it)
+                std::cout << val << " ";
+            std::cout << "\n";
+
+            it = table.rows.erase(it);
+            deleted = true;
+        }
+        else
+        {
+            ++it;
+        }
+    }
+
+    return deleted;
 }
 
 string Database::select(const string &, const string &column, const string &value) const
@@ -142,67 +347,535 @@ string Database::select(const string &, const string &column, const string &valu
     return "Not found.";
 }
 
-void Database::createTable(const string &table, const vector<pair<string, string>> &columns)
+void Database::createTable(const std::string &table, const std::vector<std::pair<std::string, std::string>> &columns)
 {
+    if (!databaseActive)
+    {
+        std::cout << "Error: No active database. Please create a database first using CREATE_DATABASE.\n";
+        return;
+    }
+
+    if (tables.find(table) != tables.end())
+    {
+        std::cout << "Error: Table " << table << " already exists.\n";
+        return;
+    }
+
+    // Check for at least one column with PRIMARY_KEY or PK
+    bool primaryKeyFound = false;
+    for (const auto &col : columns)
+    {
+        if (col.second == "PRIMARY_KEY") // Correctly check for PRIMARY_KEY
+        {
+            primaryKeyFound = true;
+            break;
+        }
+    }
+
+    if (!primaryKeyFound)
+    {
+        std::cout << "Error: Table must have at least one column with PRIMARY_KEY.\n";
+        return;
+    }
+
+    // Store the table definition
     Table newTable;
     newTable.columns = columns;
     tables[table] = newTable;
-    cout << "Table " << table << " created." << endl;
+
+    std::cout << "Table " << table << " created.\n";
 }
 
 bool Database::insertIntoTable(const std::string &table, const std::vector<std::string> &values)
 {
     auto it = tables.find(table);
-    if (it != tables.end())
+    if (it == tables.end())
     {
-        // Find number of columns in the table
-        size_t colCount = it->second.columns.size();
+        std::cout << "Table " << table << " not found.\n";
+        return false;
+    }
 
-        // Ensure values are divisible by colCount for proper row creation
-        if (values.size() % colCount != 0)
+    std::vector<std::pair<std::string, std::string>> &columns = it->second.columns;
+    std::vector<std::vector<std::string>> &rows = it->second.rows;
+
+    size_t colCount = columns.size();
+
+    if (values.size() % colCount != 0)
+    {
+        std::cout << "Error: Number of values does not match number of columns in table.\n";
+        return false;
+    }
+
+    bool inserted = false;
+
+    // Find the index of the primary key column
+    int primaryKeyIndex = -1;
+    for (size_t i = 0; i < columns.size(); ++i)
+    {
+        if (columns[i].second == "PRIMARY_KEY")
         {
-            cout << "Error: Number of values does not match the number of columns in the table.\n";
+            primaryKeyIndex = i;
+            break;
+        }
+    }
+
+    if (primaryKeyIndex == -1)
+    {
+        std::cout << "Error: Table does not have a primary key column.\n";
+        return false;
+    }
+
+    for (size_t i = 0; i < values.size(); i += colCount)
+    {
+        std::vector<std::string> row;
+        bool validRow = true;
+
+        // Validate each value against its column type
+        for (size_t j = 0; j < colCount; ++j)
+        {
+            std::string type = columns[j].second;
+            std::string val = values[i + j];
+
+            // Convert type to uppercase for consistency
+            for (size_t k = 0; k < type.length(); ++k)
+                type[k] = toupper(type[k]);
+
+            // Skip validation for the primary key column
+            if (j == primaryKeyIndex)
+            {
+                row.push_back(val);
+                continue;
+            }
+
+            // Validate other types
+            if (type == "INT")
+            {
+                for (size_t c = 0; c < val.size(); ++c)
+                {
+                    if (!isdigit(val[c]) && !(c == 0 && val[c] == '-'))
+                    {
+                        std::cout << "Type error: '" << val << "' is not a valid INT.\n";
+                        validRow = false;
+                        break;
+                    }
+                }
+            }
+            // Validate FLOAT
+            else if (type == "FLOAT")
+            {
+                bool dotSeen = false;
+                for (size_t c = 0; c < val.size(); ++c)
+                {
+                    if (val[c] == '.')
+                    {
+                        if (dotSeen)
+                        {
+                            std::cout << "Type error: '" << val << "' is not a valid FLOAT.\n";
+                            validRow = false;
+                            break;
+                        }
+                        dotSeen = true;
+                    }
+                    else if (!isdigit(val[c]) && !(c == 0 && val[c] == '-'))
+                    {
+                        std::cout << "Type error: '" << val << "' is not a valid FLOAT.\n";
+                        validRow = false;
+                        break;
+                    }
+                }
+            }
+            // Validate BOOL
+            else if (type == "BOOL")
+            {
+                if (val != "true" && val != "false" && val != "1" && val != "0")
+                {
+                    std::cout << "Type error: '" << val << "' is not a valid BOOL (true/false/1/0).\n";
+                    validRow = false;
+                    break;
+                }
+            }
+            // STRING is always valid
+            else if (type != "STRING")
+            {
+                std::cout << "Unknown data type: " << type << "\n";
+                validRow = false;
+                break;
+            }
+
+            row.push_back(val);
+        }
+
+        if (!validRow)
             return false;
-        }
 
-        // Insert values row by row
-        for (size_t i = 0; i < values.size(); i += colCount)
+        // Check for primary key uniqueness
+        std::string primaryKeyValue = row[primaryKeyIndex];
+        for (const auto &existingRow : rows)
         {
-            std::vector<std::string> row(values.begin() + i, values.begin() + i + colCount);
-            it->second.rows.push_back(row); // Insert row into table
+            if (existingRow[primaryKeyIndex] == primaryKeyValue)
+            {
+                std::cout << "Duplicate primary key value: '" << primaryKeyValue << "'.\n";
+                return false; // Primary key value must be unique
+            }
         }
 
-        cout << "Inserted into table: " << table << endl;
+        // Check for other duplicates
+        bool isDuplicate = false;
+        for (const auto &existingRow : rows)
+        {
+            if (existingRow == row)
+            {
+                isDuplicate = true;
+                break;
+            }
+        }
+
+        if (isDuplicate)
+        {
+            std::cout << "Duplicate row not inserted: ";
+            for (size_t j = 0; j < row.size(); ++j)
+                std::cout << row[j] << (j + 1 == row.size() ? "" : ", ");
+            std::cout << "\n";
+        }
+        else
+        {
+            rows.push_back(row);
+            inserted = true;
+        }
+    }
+
+    if (inserted)
+    {
+        std::cout << "Inserted into table: " << table << std::endl;
         return true;
     }
-    cout << "Table " << table << " not found.\n";
-    return false;
-}
-
-string Database::selectFromTable(const string &columns, const string &table)
-{
-    auto it = tables.find(table);
-    if (it != tables.end())
+    else
     {
-        stringstream result;
-        for (const auto &row : it->second.rows)
-        {
-            result << row[0] << " "; // Selects the first column by default, adjust based on columns
-            result << endl;
-        }
-        return result.str();
+        std::cout << "No new unique rows inserted.\n";
+        return false;
     }
-    return "";
 }
 
-void Database::join(const string &k1, const string &k2)
+std::string Database::selectFromTable(const std::string &columnsStr, const std::string &tableName)
 {
-    cout << "Joined: " << k1 << " with " << k2 << endl;
+    std::stringstream output;
+
+    auto it = tables.find(tableName);
+    if (it == tables.end())
+    {
+        output << "Table <" << tableName << "> not found.\n";
+        return output.str();
+    }
+
+    const auto &table = it->second;
+    const auto &tableColumns = table.columns;
+    const auto &rows = table.rows;
+
+    // Handle WHERE clause
+    std::string actualColumns = columnsStr;
+    std::string whereCol, op, val;
+
+    size_t wherePos = columnsStr.find("WHERE");
+    if (wherePos != std::string::npos)
+    {
+        actualColumns = columnsStr.substr(0, wherePos);
+        std::string condition = columnsStr.substr(wherePos + 5); // skip "WHERE"
+
+        std::vector<std::string> operators = {">=", "<=", "!=", "=", "<", ">"};
+        bool opFound = false;
+
+        for (const std::string &candidateOp : operators)
+        {
+            size_t pos = condition.find(candidateOp);
+            if (pos != std::string::npos)
+            {
+                whereCol = condition.substr(0, pos);
+                op = candidateOp;
+                val = condition.substr(pos + candidateOp.length());
+                opFound = true;
+                break;
+            }
+        }
+
+        if (!opFound || whereCol.empty() || op.empty() || val.empty())
+        {
+            output << "Invalid WHERE clause.\n";
+            return output.str();
+        }
+
+        // Trim whitespaces
+        whereCol.erase(remove_if(whereCol.begin(), whereCol.end(), ::isspace), whereCol.end());
+        val.erase(0, val.find_first_not_of(" \t\r\n"));
+        val.erase(val.find_last_not_of(" \t\r\n") + 1);
+    }
+
+    // Parse selected columns
+    std::vector<std::string> selectedColumns;
+    if (actualColumns.find('*') != std::string::npos)
+    {
+        for (const auto &col : tableColumns)
+        {
+            selectedColumns.push_back(col.first);
+        }
+    }
+    else
+    {
+        std::stringstream ss(actualColumns);
+        std::string token;
+        while (std::getline(ss, token, ','))
+        {
+            // Trim token
+            token.erase(remove_if(token.begin(), token.end(), ::isspace), token.end());
+            if (!token.empty())
+                selectedColumns.push_back(token);
+        }
+    }
+
+    // Resolve selected column indexes
+    std::vector<int> colIndexes;
+    for (const auto &colName : selectedColumns)
+    {
+        bool found = false;
+        for (size_t i = 0; i < tableColumns.size(); ++i)
+        {
+            if (tableColumns[i].first == colName)
+            {
+                colIndexes.push_back(i);
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+        {
+            output << "Column '" << colName << "' does not exist in table <" << tableName << ">.\n";
+            return output.str();
+        }
+    }
+
+    // Resolve WHERE column index
+    int whereColIndex = -1;
+    std::string whereType;
+    if (!whereCol.empty())
+    {
+        for (size_t i = 0; i < tableColumns.size(); ++i)
+        {
+            if (tableColumns[i].first == whereCol)
+            {
+                whereColIndex = static_cast<int>(i);
+                whereType = tableColumns[i].second;
+                break;
+            }
+        }
+        if (whereColIndex == -1)
+        {
+            output << "WHERE column '" << whereCol << "' does not exist in table <" << tableName << ">.\n";
+            return output.str();
+        }
+    }
+
+    // Header
+    output << "========== Selected columns from table: " << tableName << " ==========\n";
+    for (size_t i = 0; i < colIndexes.size(); ++i)
+    {
+        output << tableColumns[colIndexes[i]].first;
+        if (i < colIndexes.size() - 1)
+            output << " | ";
+    }
+    output << "\n----------------------------------------\n";
+
+    // Rows
+    for (const auto &row : rows)
+    {
+        bool match = true;
+        if (whereColIndex != -1)
+        {
+            std::string cell = row[whereColIndex];
+            std::string valType = whereType;
+            for (size_t k = 0; k < valType.length(); ++k)
+                valType[k] = toupper(valType[k]);
+
+            if (valType == "INT")
+            {
+                int lhs = std::atoi(cell.c_str());
+                int rhs = std::atoi(val.c_str());
+                if (op == "=")
+                    match = lhs == rhs;
+                else if (op == "!=")
+                    match = lhs != rhs;
+                else if (op == "<")
+                    match = lhs < rhs;
+                else if (op == ">")
+                    match = lhs > rhs;
+                else if (op == "<=")
+                    match = lhs <= rhs;
+                else if (op == ">=")
+                    match = lhs >= rhs;
+            }
+            else if (valType == "FLOAT")
+            {
+                float lhs = std::atof(cell.c_str());
+                float rhs = std::atof(val.c_str());
+                if (op == "=")
+                    match = lhs == rhs;
+                else if (op == "!=")
+                    match = lhs != rhs;
+                else if (op == "<")
+                    match = lhs < rhs;
+                else if (op == ">")
+                    match = lhs > rhs;
+                else if (op == "<=")
+                    match = lhs <= rhs;
+                else if (op == ">=")
+                    match = lhs >= rhs;
+            }
+            else if (valType == "STRING" || valType == "BOOL")
+            {
+                if (op == "=")
+                    match = cell == val;
+                else if (op == "!=")
+                    match = cell != val;
+                else
+                    match = false;
+            }
+            else
+            {
+                match = false;
+            }
+        }
+
+        if (match)
+        {
+            for (size_t i = 0; i < colIndexes.size(); ++i)
+            {
+                output << row[colIndexes[i]];
+                if (i < colIndexes.size() - 1)
+                    output << " | ";
+            }
+            output << "\n";
+        }
+    }
+
+    output << "========================================\n";
+    return output.str();
 }
 
-void Database::groupBy(const string &key)
+bool Database::join(const std::string &table1Name, const std::string &table2Name,
+                    const std::string &column1, const std::string &column2)
 {
-    cout << "Grouped by: " << key << endl;
+    if (tables.find(table1Name) == tables.end() || tables.find(table2Name) == tables.end())
+    {
+        std::cout << "One or both tables not found.\n";
+        return false;
+    }
+
+    Table &table1 = tables[table1Name];
+    Table &table2 = tables[table2Name];
+
+    int col1Index = -1, col2Index = -1;
+
+    for (size_t i = 0; i < table1.columns.size(); ++i)
+        if (table1.columns[i].first == column1)
+            col1Index = static_cast<int>(i);
+
+    for (size_t i = 0; i < table2.columns.size(); ++i)
+        if (table2.columns[i].first == column2)
+            col2Index = static_cast<int>(i);
+
+    if (col1Index == -1 || col2Index == -1)
+    {
+        std::cout << "Join columns not found.\n";
+        return false;
+    }
+
+    Table result;
+
+    // Add all columns from table1
+    for (const auto &col : table1.columns)
+        result.columns.push_back(col);
+
+    // Add all columns from table2
+    for (const auto &col : table2.columns)
+        result.columns.push_back(col);
+
+    // Nested loop join
+    for (const auto &row1 : table1.rows)
+    {
+        for (const auto &row2 : table2.rows)
+        {
+            if (row1[col1Index] == row2[col2Index])
+            {
+                std::vector<std::string> joinedRow = row1;
+                joinedRow.insert(joinedRow.end(), row2.begin(), row2.end());
+                result.rows.push_back(joinedRow);
+            }
+        }
+    }
+
+    std::string joinedTableName = table1Name + "_" + table2Name + "_join";
+    tables[joinedTableName] = result;
+
+    std::cout << "Joined: " << table1Name << " with " << table2Name
+              << " => " << joinedTableName << "\n";
+
+    return true;
+}
+
+bool Database::groupBy(const std::string &tableName, const std::string &columnName)
+{
+    auto it = tables.find(tableName);
+    if (it == tables.end())
+    {
+        std::cout << "Table <" << tableName << "> not found.\n";
+        return false;
+    }
+
+    Table &original = it->second;
+    int colIndex = -1;
+
+    for (size_t i = 0; i < original.columns.size(); ++i)
+    {
+        if (original.columns[i].first == columnName)
+        {
+            colIndex = static_cast<int>(i);
+            break;
+        }
+    }
+
+    if (colIndex == -1)
+    {
+        std::cout << "Column <" << columnName << "> not found.\n";
+        return false;
+    }
+
+    std::map<std::string, std::vector<std::vector<std::string>>> groups;
+
+    for (const auto &row : original.rows)
+    {
+        if (colIndex < static_cast<int>(row.size()))
+        {
+            std::string key = row[colIndex];
+            groups[key].push_back(row);
+        }
+    }
+
+    // Create a new table with name: <tableName>_grouped_by_<columnName>
+    std::string newTableName = tableName + "_grouped_by_" + columnName;
+
+    Table grouped;
+    grouped.columns = original.columns;
+
+    for (const auto &entry : groups)
+    {
+        for (const auto &row : entry.second)
+        {
+            grouped.rows.push_back(row);
+        }
+    }
+
+    tables[newTableName] = grouped;
+
+    std::cout << "Grouped by: " << columnName << " -> Created table <" << newTableName << ">\n";
+    return true;
 }
 
 void Database::order(const string &key)

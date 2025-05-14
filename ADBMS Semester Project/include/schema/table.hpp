@@ -31,14 +31,28 @@ public:
     Value(const std::string &v);
     Value(const char *v); // Support const char*
 
+    bool operator==(const Value &other) const;
     std::string toString() const;
 };
+
+// Hash function for Value to use in unordered_map/set if needed
+namespace std
+{
+    template <>
+    struct hash<Value>
+    {
+        size_t operator()(const Value &v) const;
+    };
+}
 
 struct Column
 {
     std::string name;
     DataType type;
-    Column(const std::string &n, DataType t) : name(n), type(t) {}
+    bool isPrimaryKey;
+
+    Column(const std::string &n, DataType t, bool isPK = false)
+        : name(n), type(t), isPrimaryKey(isPK) {}
 };
 
 typedef std::unordered_map<std::string, Value> Row;
@@ -49,14 +63,26 @@ private:
     std::string tableName;
     std::vector<Column> columns;
     std::vector<Row> rows;
-    std::vector<std::vector<Value> > selectFilteredRows(const std::string& columnName, const Value& matchValue) const;
+    std::string primaryKeyName; // NEW: Primary key column name
+
+    std::vector<std::vector<Value>> selectFilteredRows(const std::string &columnName, const Value &matchValue) const;
 
 public:
     Table(const std::string &name);
-    void addColumn(const std::string &name, DataType type);
-    void insertRow(const std::vector<Value> &values);
+
+    void addColumn(const std::string &name, DataType type, bool isPrimaryKey = false);
+
+    bool insertRow(const std::vector<Value> &values); // Returns false on PK violation
+
     void showSchema() const;
     void showAllRows() const;
+
+    const std::string &getName() const;
+    const std::vector<Column> &getColumns() const;
+    const std::vector<Row> &getRows() const;
+
+    void setPrimaryKey(const std::string &colName); // NEW: Set PK column
+    const std::string &getPrimaryKey() const;       // NEW: Get PK column
 };
 
 #endif

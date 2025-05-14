@@ -28,8 +28,8 @@ public:
     bool insertIntoTable(const std::string &table, const std::vector<std::string> &values);
     std::string selectFromTable(const std::string &columns, const std::string &table);
 
-    void join(const std::string &key1, const std::string &key2);
-    void groupBy(const std::string &key);
+    bool join(const std::string &table1Name, const std::string &table2Name, const std::string &column1, const std::string &column2);
+    bool groupBy(const std::string &tableName, const std::string &columnName);
     void order(const std::string &key);
     void match(const std::string &pattern);
     void limit(int limit);
@@ -43,6 +43,7 @@ private:
         std::vector<std::vector<std::string>> rows;
     };
 
+    bool databaseActive;
     std::string databaseName;
     std::unordered_map<std::string, Table> tables;
     std::unordered_set<std::string> index;
