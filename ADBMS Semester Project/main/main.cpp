@@ -27,8 +27,6 @@ void showCommands()
          << "  LIMIT <table_name> <n>\n"
          << "  DISTINCT <table_name> <column>\n"
          << "  CREATE_INDEX <table_name> <column>\n"
-         << "  BACKUP <backup_file>\n"
-         << "  RESTORE <backup_file>\n"
          << "  SHOWDATABASE\n"
          << "  SHOWTABLES\n"
          << "  FLUSH\n"

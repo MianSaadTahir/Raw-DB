@@ -5,7 +5,6 @@
 #include <cstdlib>
 #include <map>
 #include <string>
-#include <fstream>
 
 using namespace std;
 
@@ -363,6 +362,7 @@ void Database::removeKeyValuePair(const std::string &key, const std::string &val
         std::cout << "Error: No such key-value pair to remove." << std::endl;
     }
 }
+
 
 void Database::createTable(const std::string &table, const std::vector<std::pair<std::string, std::string>> &columns)
 {
