@@ -40,4 +40,5 @@ test_recovery.exe
 g++ tests/test_access_control.cpp src/security/access_control.cpp -Iinclude -o test_access_control
 test_access_control.exe
 
-
+g++ tests/test_transaction.cpp src/transaction_manager/transaction.cpp -Iinclude -o test_transaction
+test_transaction.exe
