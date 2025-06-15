@@ -38,19 +38,19 @@ The system is divided into two major parts:
 - `RecoveryManager`: Backs up and restores the database.
 
 ## Circuit Diagram
-<img src="diagram/architecture.PNG" alt="Screenshot" width="75%">
-<img src="diagram/dataflowdiagram.PNG" alt="Screenshot" width="75%">
+<img src="diagram/architecture.png" alt="Screenshot" width="75%">
+<img src="diagram/dataflowdiagram.png" alt="Screenshot" width="75%">
 
 ## Screenshots
-<img src="assets/1.PNG" alt="Screenshot" width="75%">
-<img src="assets/2.PNG" alt="Screenshot" width="75%">
-<img src="assets/3.PNG" alt="Screenshot" width="75%">
-<img src="assets/4.PNG" alt="Screenshot" width="75%">
-<img src="assets/5.PNG" alt="Screenshot" width="75%">
-<img src="assets/6.PNG" alt="Screenshot" width="75%">
-<img src="assets/7.PNG" alt="Screenshot" width="75%">
-<img src="assets/8.PNG" alt="Screenshot" width="75%">
-<img src="assets/9.PNG" alt="Screenshot" width="75%">
+<img src="assets/1.png" alt="Screenshot" width="75%">
+<img src="assets/2.png" alt="Screenshot" width="75%">
+<img src="assets/3.png" alt="Screenshot" width="75%">
+<img src="assets/4.png" alt="Screenshot" width="75%">
+<img src="assets/5.png" alt="Screenshot" width="75%">
+<img src="assets/6.png" alt="Screenshot" width="75%">
+<img src="assets/7.png" alt="Screenshot" width="75%">
+<img src="assets/8.png" alt="Screenshot" width="75%">
+<img src="assets/9.png" alt="Screenshot" width="75%">
 
 ## Usage
 1. Clone the repository
