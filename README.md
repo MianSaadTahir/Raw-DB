@@ -39,7 +39,6 @@ The system is divided into two major parts:
 
 ## Dataflow Diagram
 <img src="diagram/architecture.png" alt="Screenshot" width="50%">
-<img src="diagram/dataflowdiagram.png" alt="Screenshot" width="50%">
 
 ## Screenshots
 <img src="assets/1.png" alt="Screenshot" width="75%">
