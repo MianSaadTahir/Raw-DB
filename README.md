@@ -4,7 +4,7 @@ A lightweight, modular, and extensible **Relational Database Management System (
 ## Table of Contents
 - [Features](#features)
 - [Architecture](#architecture)
-- [Circuit Diagram](#circuit-diagram)
+- [Dataflow Diagram](#dataflow-diagram)
 - [Screenshots](#screenshots)
 - [Usage](#usage)
 - [Documentation](#documentation)
@@ -37,7 +37,7 @@ The system is divided into two major parts:
 - `TransactionManager` & `LockManager`: Ensures data consistency.
 - `RecoveryManager`: Backs up and restores the database.
 
-## Circuit Diagram
+## Dataflow Diagram
 <img src="diagram/architecture.png" alt="Screenshot" width="50%">
 <img src="diagram/dataflowdiagram.png" alt="Screenshot" width="50%">
 
