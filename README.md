@@ -60,10 +60,10 @@ The system is divided into two major parts:
 3. Run the program
    `main.exe`
 4. Login credentials
-   - Admin
+   - Admin <br>
    Username: `admin`
-   Password: `admin123`
-   - Guest
+   Password: `admin123`<br>
+   - Guest <br>
    Username: `guest`
    Password: `guest123`
 6. Use `HELP` to see available commands
