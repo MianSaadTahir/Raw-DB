@@ -38,19 +38,12 @@ The system is divided into two major parts:
 - `RecoveryManager`: Backs up and restores the database.
 
 ## Circuit Diagram
-<img src="diagram/architecture.png" alt="Screenshot" width="75%">
-<img src="diagram/dataflowdiagram.png" alt="Screenshot" width="75%">
+<img src="diagram/architecture.png" alt="Screenshot" width="50%">
+<img src="diagram/dataflowdiagram.png" alt="Screenshot" width="50%">
 
 ## Screenshots
 <img src="assets/1.png" alt="Screenshot" width="75%">
 <img src="assets/2.png" alt="Screenshot" width="75%">
-<img src="assets/3.png" alt="Screenshot" width="75%">
-<img src="assets/4.png" alt="Screenshot" width="75%">
-<img src="assets/5.png" alt="Screenshot" width="75%">
-<img src="assets/6.png" alt="Screenshot" width="75%">
-<img src="assets/7.png" alt="Screenshot" width="75%">
-<img src="assets/8.png" alt="Screenshot" width="75%">
-<img src="assets/9.png" alt="Screenshot" width="75%">
 
 ## Usage
 1. Clone the repository
