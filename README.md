@@ -6,22 +6,19 @@ A lightweight, modular, and extensible **Relational Database Management System (
 - [Architecture](#architecture)
 - [Dataflow Diagram](#dataflow-diagram)
 - [Screenshots](#screenshots)
-- [Usage](#usage)
 - [Documentation](#documentation)
 - [Technologies Used](#technologies-used)
+- [Usage](#usage)
 - [Contributing](#contributing)
 
 ## Features
-- **Role-Based Access Control**: Admin & Guest login with secure credentials.
-- **SQL-like Command Support**: Create tables, insert data, SELECT queries, JOINs.
-- **Page-Based Storage Engine**: Efficient persistent data storage using pages.
-- **B+ Tree Indexing**: Fast access through indexed keys.
-- **Transaction Control**: Basic locking via a `LockManager` for consistency.
-- **Recovery System**: Backup and restore databases.
-- **Parser + Executor**: Converts and runs commands through a structured interface.
-- **Modular Design**: Organized into clearly defined components for extensibility.
-- **Testing**: Unit tests for major modules like FileManager, StorageEngine, Transactions, Recovery, etc.
-
+- Admin & Guest login with secure credentials.
+- Create tables, insert data, SELECT queries, JOINs.
+- Efficient persistent data storage using pages.
+- Fast access through indexed keys.
+- Locking via a `LockManager` for consistency.
+- Backup and restore databases.
+- Converts and runs commands through a structured interface for parsing.
 
 ## Architecture
 The system is divided into two major parts:
@@ -44,22 +41,6 @@ The system is divided into two major parts:
 <img src="assets/1.png" alt="Screenshot" width="75%">
 <img src="assets/2.png" alt="Screenshot" width="75%">
 
-## Usage
-1. Clone the repository
-   `git clone https://github.com/miansaadtahir/Raw-DB.git`
-2. Navigate to the project directory
-   `cd RawDB\`
-3. Run the program
-   `main.exe`
-4. Login credentials
-   - Admin <br>
-   Username: `admin`
-   Password: `admin123`<br>
-   - Guest <br>
-   Username: `guest`
-   Password: `guest123`
-6. Use `HELP` to see available commands
-
 ## Documentation
 For a detailed overview of the project, refer to the [Documentation](./documentation) in the repository.
 
@@ -67,7 +48,22 @@ For a detailed overview of the project, refer to the [Documentation](./documenta
 - C++
 - STL
 
+## Usage
+1. Clone the repository
+   `git clone https://github.com/miansaadtahir/Raw-DB.git`
+2. Run the program
+   `main.exe`
+3. Login credentials
+   - Admin <br>
+   Username: `admin`
+   Password: `admin123`<br>
+   - Guest <br>
+   Username: `guest`
+   Password: `guest123`
+4. Use `HELP` to see available commands
+
 ## Contributing
 Contributions, issues, and feature requests are welcome!  
 Feel free to check out the [issues page](https://github.com/miansaadtahir/Raw-DB/issues) for more information.
+
 
