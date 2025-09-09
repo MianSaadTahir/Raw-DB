@@ -16,7 +16,7 @@ A lightweight, modular, and extensible **Relational Database Management System (
 - Create tables, insert data, SELECT queries, JOINs.
 - Efficient persistent data storage using pages.
 - Fast access through indexed keys.
-- Locking via a `LockManager` for consistency.
+- Locking via a LockManager for consistency.
 - Backup and restore databases.
 - Converts and runs commands through a structured interface for parsing.
 
@@ -65,5 +65,6 @@ For a detailed overview of the project, refer to the [Documentation](./documenta
 ## Contributing
 Contributions, issues, and feature requests are welcome!  
 Feel free to check out the [issues page](https://github.com/miansaadtahir/Raw-DB/issues) for more information.
+
 
 
