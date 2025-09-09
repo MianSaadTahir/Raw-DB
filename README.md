@@ -12,27 +12,27 @@ A lightweight, modular, and extensible **Relational Database Management System (
 - [Contributing](#contributing)
 
 ## Features
-- Admin & Guest login with secure credentials.
-- Create tables, insert data, SELECT queries, JOINs.
-- Efficient persistent data storage using pages.
-- Fast access through indexed keys.
-- Locking via a LockManager for consistency.
-- Backup and restore databases.
-- Converts and runs commands through a structured interface for parsing.
+- Admin & Guest login with secure credentials
+- Create tables, insert data, SELECT queries, JOINs
+- Efficient persistent data storage using pages
+- Fast access through indexed keys
+- Locking via a LockManager for consistency
+- Backup and restore databases
+- Converts and runs commands through a structured interface for parsing
 
 ## Architecture
 The system is divided into two major parts:
 ### 1. **User-Facing Components**
-- `main.cpp`: Command-line interface for interacting with the DB.
-- `AccessControl`: Handles login and role verification.
-- `Parser`: Parses user commands into structured data.
-- `Executor`: Maps parsed commands to database operations.
+- `main.cpp`: Command-line interface for interacting with the DB
+- `AccessControl`: Handles login and role verification
+- `Parser`: Parses user commands into structured data
+- `Executor`: Maps parsed commands to database operations
 
 ### 2. **Backend Components**
-- `Database`: Manages schema, tables, and data.
-- `StorageEngine`: Handles page I/O, buffer pool, and indexing.
-- `TransactionManager` & `LockManager`: Ensures data consistency.
-- `RecoveryManager`: Backs up and restores the database.
+- `Database`: Manages schema, tables, and data
+- `StorageEngine`: Handles page I/O, buffer pool, and indexing
+- `TransactionManager` & `LockManager`: Ensures data consistency
+- `RecoveryManager`: Backs up and restores the database
 
 ## Dataflow Diagram
 <img src="diagram/architecture.png" alt="Screenshot" width="50%">
@@ -65,6 +65,7 @@ For a detailed overview of the project, refer to the [Documentation](./documenta
 ## Contributing
 Contributions, issues, and feature requests are welcome!  
 Feel free to check out the [issues page](https://github.com/miansaadtahir/Raw-DB/issues) for more information.
+
 
 
 
