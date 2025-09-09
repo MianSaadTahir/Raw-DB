@@ -65,8 +65,9 @@ For a detailed overview of the project, refer to the [Documentation](./documenta
 
 ## Technologies Used
 - C++
-- C++ STL
+- STL
 
 ## Contributing
 Contributions, issues, and feature requests are welcome!  
 Feel free to check out the [issues page](https://github.com/miansaadtahir/Raw-DB/issues) for more information.
+
