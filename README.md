@@ -64,9 +64,10 @@ For a detailed overview of the project, refer to the [Documentation](./documenta
 
 ## Contributing
 Contributions, issues, and feature requests are welcome!  
-Feel free to check out the [issues page](https://github.com/miansaadtahir/Raw-DB/issues) for more information.
+Feel free to check out the [issues page](https://github.com/miansaadtahir/Raw-DB/issues).
 
 ## License
 
 This project is open source and available under the MIT [License](https://github.com/MianSaadTahir/Raw-DB/blob/main/LICENSE).
+
 
