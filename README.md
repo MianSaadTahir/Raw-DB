@@ -10,7 +10,7 @@ A lightweight, modular, and extensible **Relational Database Management System (
 - [Technologies Used](#technologies-used)
 - [Usage](#usage)
 - [Contributing](#contributing)
-
+- [License](#license)
 ## Features
 - Admin & Guest login with secure credentials
 - Create tables, insert data, SELECT queries, JOINs
@@ -66,6 +66,7 @@ For a detailed overview of the project, refer to the [Documentation](./documenta
 Contributions, issues, and feature requests are welcome!  
 Feel free to check out the [issues page](https://github.com/miansaadtahir/Raw-DB/issues) for more information.
 
+## License
 
-
+This project is open source and available under the MIT [License](https://github.com/MianSaadTahir/Raw-DB/blob/main/LICENSE).
 
